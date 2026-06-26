@@ -2,6 +2,8 @@ import { pathToFileURL } from 'node:url';
 import path from 'node:path';
 import fs from 'node:fs';
 import { spawn } from 'node:child_process';
+import fs from 'node:fs';
+import { spawn } from 'node:child_process';
 import glob from 'fast-glob';
 import { ConfigLoader } from '../../config/loader.js';
 import { TestRunner } from '../../runner/index.js';
