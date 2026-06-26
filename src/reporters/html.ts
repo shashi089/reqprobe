@@ -130,6 +130,7 @@ function buildHtml(summary: ReportSummary): string {
     .stat-card.failed  .value { color: #fc8181; }
     .stat-card.total   .value { color: #90cdf4; }
     .stat-card.time    .value { color: #fbd38d; font-size: 1.4rem; }
+    .stat-card.performance .value { color: #f6ad55; font-size: 1.4rem; }
 
     .overall-badge {
       display: inline-block;
@@ -268,6 +269,16 @@ function buildHtml(summary: ReportSummary): string {
     <div class="stat-card time">
       <div class="label">Duration</div>
       <div class="value">${formatDuration(summary.totalDuration)}</div>
+    </div>
+    <div class="stat-card performance">
+      <div class="label">Avg Latency</div>
+      <div class="value">${summary.performance ? formatDuration(summary.performance.avgResponseTime) : '0ms'}</div>
+    </div>
+    <div class="stat-card performance">
+      <div class="label">Min / Max</div>
+      <div class="value" style="font-size: 1.1rem; margin-top: 0.5rem; color: #a0aec0;">
+        ${summary.performance ? formatDuration(summary.performance.minResponseTime) : '0ms'} / ${summary.performance ? formatDuration(summary.performance.maxResponseTime) : '0ms'}
+      </div>
     </div>
   </div>
 

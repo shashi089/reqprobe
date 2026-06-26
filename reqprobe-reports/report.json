@@ -1,27 +1,27 @@
 {
-  "timestamp": "2026-02-18T07:06:42.622Z",
-  "totalPassed": 2,
+  "timestamp": "2026-06-07T11:12:45.003Z",
+  "totalPassed": 1,
   "totalFailed": 0,
-  "totalTests": 2,
-  "totalDuration": 449,
+  "totalTests": 1,
+  "totalDuration": 2,
   "suites": [
     {
-      "name": "PokeAPI Health Check",
+      "name": "fuzz-demo.test.ts",
       "results": [
         {
-          "name": "should fetch ditto data",
+          "name": "Fuzz Demo: POST /users with generated schema mock",
           "status": "pass",
-          "duration": 349
-        },
-        {
-          "name": "should fail on non-existent pokemon",
-          "status": "pass",
-          "duration": 97
+          "duration": 1
         }
       ],
-      "passed": 2,
+      "passed": 1,
       "failed": 0,
-      "duration": 449
+      "duration": 2
     }
-  ]
+  ],
+  "performance": {
+    "avgResponseTime": 1,
+    "minResponseTime": 1,
+    "maxResponseTime": 1
+  }
 }

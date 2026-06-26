@@ -6,6 +6,7 @@ import pc from 'picocolors';
 import { initHandler } from './commands/init.js';
 import { runHandler } from './commands/run.js';
 import { generateHandler } from './commands/generate.js';
+import { fuzzHandler } from './commands/fuzz.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pkgPath = path.join(__dirname, '../../package.json');
@@ -30,6 +31,9 @@ program
     .description('Run API tests')
     .argument('[pattern]', 'Glob pattern for test files', '**/*.test.ts')
     .option('-w, --watch', 'Watch files for changes and re-run tests')
+    .option('--tag <tags>', 'Only run tests whose name contains these @tags (comma-separated, e.g. smoke,regression)')
+    .option('--skip <tags>', 'Skip tests whose name contains these @tags (comma-separated, e.g. destructive)')
+    .option('--workers <n>', 'Number of test files to run concurrently (default: 1)', '1')
     .action(async (pattern, options) => {
         await runHandler(pattern, options);
     });
@@ -41,6 +45,15 @@ program
     .option('-f, --force', 'Overwrite existing files')
     .action(async (options) => {
         await generateHandler(options);
+    });
+
+program
+    .command('fuzz')
+    .description('Fuzz API endpoints with generated payloads based on OpenAPI spec')
+    .requiredOption('--from <file>', 'Path to OpenAPI JSON file')
+    .option('--url <url>', 'Override baseUrl')
+    .action(async (options) => {
+        await fuzzHandler(options);
     });
 
 // Handle unknown commands

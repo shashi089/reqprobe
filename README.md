@@ -2,14 +2,14 @@
 
 # reqprobe
 
-**TypeScript-first API testing for teams that ship.**
+**The open-source TypeScript API testing framework — code-first, Git-native, OpenAPI-aware.**
 
-[![npm](https://img.shields.io/npm/v/reqprobe?color=0ea5e9&label=npm)](https://www.npmjs.com/package/reqprobe)
+[![npm](https://img.shields.io/npm/v/req-probe?color=0ea5e9&label=npm)](https://www.npmjs.com/package/req-probe)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6)](https://www.typescriptlang.org)
 
-Write API tests in TypeScript. Run them from the CLI. Validate against your OpenAPI spec. Ship with confidence.
+Write REST API tests in TypeScript. Validate responses against your OpenAPI spec automatically. Run from the CLI. Ship with confidence.
 
 </div>
 
@@ -17,83 +17,111 @@ Write API tests in TypeScript. Run them from the CLI. Validate against your Open
 
 ## What is reqprobe?
 
-Traditional GUI-based tools like Postman or Insomnia are built for manual exploration. `reqprobe` is a **code-first API testing framework** built for automation. Tests live in your repo as `.ts` files — versioned, diff-able, and reviewable like any other code.
+**reqprobe** is a lightweight, open-source API testing framework for TypeScript developers who want their tests to live in the codebase — not locked inside a GUI tool.
 
-### Why not GUI-based tools?
+Unlike Postman, Bruno, Insomnia, or Hoppscotch, reqprobe treats API tests as **real TypeScript code**: versioned in Git, reviewable in PRs, executable in any CI/CD pipeline with zero configuration.
 
-| | GUI-based Tools | reqprobe |
+### Why reqprobe over GUI-based tools?
+
+| | GUI Tools (Postman, Insomnia, Bruno) | reqprobe |
 |---|---|---|
-| **Lives in Git** | ❌ JSON exports, not code | ✅ `.ts` files, full diff history |
-| **TypeScript** | ❌ Proprietary scripting | ✅ Native, typed, IDE-complete |
-| **CI/CD** | ⚠️ Requires external runners | ✅ `npx reqprobe run` — done |
-| **OpenAPI validation** | ❌ Manual schema checks | ✅ Automatic per-request |
-| **Code review** | ❌ Proprietary state, no diffs | ✅ PRs, blame, history |
-| **Cost** | 💸 Subscriptions required | ✅ Free, open-source |
+| **Lives in Git** | ❌ JSON exports, not real code | ✅ `.ts` files — diff, blame, review |
+| **TypeScript** | ❌ Proprietary scripting | ✅ Native, typed, full IDE support |
+| **OpenAPI contract testing** | ❌ Manual, optional | ✅ Automatic per-request validation |
+| **CI/CD** | ⚠️ Requires extra runners or paid plans | ✅ `npx reqprobe run` — done |
+| **Schema-driven fuzzing** | ❌ Not available | ✅ Built-in, from your OpenAPI spec |
+| **Cost** | 💸 Subscription required for team features | ✅ Free, open-source, self-hostable |
 
-If your tests live in a GUI, they don't belong to your team — they belong to a vendor. **reqprobe puts your tests back in your codebase.**
+If your API tests live in a GUI, they belong to a vendor — not your team. reqprobe puts them back in your codebase where they belong.
 
 ---
 
 ## Features
 
 | | Feature | Description |
-|---|---------|-------------|
-| 📝 | **TypeScript Native** | Tests are written in fully typed `.ts` files with full IDE support. |
-| 🛡️ | **OpenAPI Contract Validation** | Automatically validate response payloads against your OpenAPI 3.x spec using Ajv — no extra assertion code needed. |
-| 📊 | **Rich Reporting** | Self-contained HTML + JSON reports. No external dependencies. |
-| 🌱 | **Git-Native** | Full diff history, PR reviews, blame — your tests are real code. |
-| ⚙️ | **CI/CD Ready** | Exits with code `1` on failure. Works with GitHub Actions, GitLab CI, and any CI runner out of the box. |
-| 🏗️ | **Monorepo Support** | Per-package config. Each service owns its own tests. |
-| 🔜 | **Watch Mode** | *(Coming soon)* `reqprobe run --watch` — re-run tests on file save. |
-| 🔜 | **Scaffold Generator** | *(Coming soon)* Generate typed test stubs from your OpenAPI spec. |
-| 🔜 | **beforeAll / afterAll hooks** | *(Coming in v0.2)* Shared setup and teardown across tests. |
+|---|---|---|
+| 📝 | **TypeScript Native** | Tests are `.ts` files with full IDE support, type checking, and refactoring. |
+| 🛡️ | **OpenAPI Contract Validation** | Automatically validate every API response against your OpenAPI 3.x spec using Ajv. No extra assertions needed. |
+| 🔐 | **Auth Helpers** | Bearer, Basic, API Key, and OAuth2 (client credentials) — configured once, applied to every request. Token caching included. |
+| ⏳ | **Async Polling** | `ctx.api.poll()` — test job queues, webhooks, and background tasks with configurable interval and timeout. |
+| 🏷️ | **Tag Filtering** | Tag tests with `@smoke`, `@regression`, `@destructive` — run subsets via `--tag` or `--skip`. |
+| ⚡ | **Parallel Execution** | `reqprobe run --workers 8` — run test files concurrently for faster CI pipelines. |
+| 🔀 | **Schema Fuzzing** | `ctx.fuzz.generate('/users', 'POST')` generates realistic payloads from your OpenAPI spec. |
+| 📊 | **Rich Reports** | Self-contained HTML, JSON, and JUnit XML reports. JUnit output works natively with Jenkins, GitLab CI, and Azure DevOps. |
+| 🌱 | **Git-Native** | Tests are code — full diff history, PR reviews, and code coverage tooling just work. |
+| ⚙️ | **CI/CD Ready** | Exits with code `1` on failure. Works with GitHub Actions, GitLab CI, Jenkins, and any CI runner. |
+| 🏗️ | **Monorepo Support** | Per-package config files — each service owns its own tests and base URL. |
+| 👁️ | **Watch Mode** | `reqprobe run --watch` — re-run tests on file save during development. |
+| 📋 | **Scaffold Generator** | `reqprobe generate --from openapi.json` — generate typed test stubs from any OpenAPI spec. |
+
+---
+
+## Installation
+
+```bash
+# npm
+npm install req-probe
+
+# yarn
+yarn add req-probe
+
+# pnpm
+pnpm add req-probe
+```
+
+**Requirements:** Node.js 18 or higher.
 
 ---
 
 ## Quick Start
 
-> **reqprobe is not yet published to npm.** Install it directly from GitHub — see the full guide in **[INSTALL_FROM_GITHUB.md](./INSTALL_FROM_GITHUB.md)**.
-
-### 1. Install into your project
-
-```bash
-npm install github:shashi089/reqprobe
-```
-
-### 2. Create a config file
+### 1. Create a config file
 
 ```ts
 // reqprobe.config.ts
-import type { Config } from 'reqprobe';
+import type { Config } from 'req-probe';
 
 const config: Config = {
   baseUrl: 'https://your-api.com',
   timeout: 10_000,
-  headers: {
-    Authorization: `Bearer ${process.env.API_TOKEN}`,
+  auth: {
+    type: 'bearer',
+    token: process.env.API_TOKEN ?? '',
   },
 };
 
 export default config;
 ```
 
-### 3. Write a test
+### 2. Write a test
 
 ```ts
 // tests/users.test.ts
-import { test } from 'reqprobe/dsl';
+import { test } from 'req-probe/dsl';
 
 test('GET /users — returns 200', async (ctx) => {
-  const res = await ctx.request({ url: '/users', method: 'GET' });
+  const res = await ctx.api.get('/users');
   ctx.expect(res).toHaveStatus(200);
   ctx.expect(res.body).toHaveProperty('data');
 });
+
+test('POST /users — creates a user @smoke', async (ctx) => {
+  const res = await ctx.api.post('/users', { name: 'Alice', email: 'alice@example.com' });
+  ctx.expect(res).toHaveStatus(201);
+  ctx.expect(res.body.name).toBe('Alice');
+});
 ```
 
-### 4. Run it
+### 3. Run
 
 ```bash
 npx reqprobe run "tests/**/*.test.ts"
+
+# Run only smoke tests
+npx reqprobe run --tag smoke
+
+# Run 8 files in parallel
+npx reqprobe run --workers 8
 ```
 
 Output:
@@ -101,49 +129,40 @@ Output:
 ```
 ❯ users.test.ts
 
-  ✓ GET /users — returns 200   312ms
+  ✓ GET /users — returns 200        312ms
+  ✓ POST /users — creates a user    189ms
 
 ────────────────────────────────────────
-   PASSED   312ms
+   PASSED   501ms
 ────────────────────────────────────────
-  ✓ Passed  1
+  ✓ Passed  2
   ✖ Failed  0
-    Total   1
+    Total   2
 ────────────────────────────────────────
 ```
 
-Exit code `1` on failure — CI-ready out of the box.
+Exit code `1` on any failure — CI-ready with zero configuration.
 
 ---
 
-## Try It Against a Real API
+## Try It Now — No API Needed
 
-Want to see reqprobe working immediately? Run this against the free [PokéAPI](https://pokeapi.co) — no auth required.
+Run this against the free [PokéAPI](https://pokeapi.co) — no auth, no setup:
 
 ```ts
 // tests/pokeapi.test.ts
-import { test } from 'reqprobe/dsl';
+import { test } from 'req-probe/dsl';
 
 test('GET /pokemon/pikachu — returns correct name', async (ctx) => {
-  const res = await ctx.request({ url: '/pokemon/pikachu', method: 'GET' });
+  const res = await ctx.api.get('/pokemon/pikachu');
   ctx.expect(res).toHaveStatus(200);
   ctx.expect(res.body.name).toBe('pikachu');
-});
-
-test('GET /pokemon/1 — returns bulbasaur', async (ctx) => {
-  const res = await ctx.request({ url: '/pokemon/1', method: 'GET' });
-  ctx.expect(res).toHaveStatus(200);
-  ctx.expect(res.body.name).toBeTruthy();
 });
 ```
 
 ```ts
 // reqprobe.config.ts
-const config = {
-  baseUrl: 'https://pokeapi.co/api/v2',
-  timeout: 10_000,
-};
-export default config;
+export default { baseUrl: 'https://pokeapi.co/api/v2', timeout: 10_000 };
 ```
 
 ```bash
@@ -156,26 +175,41 @@ npx reqprobe run "tests/pokeapi.test.ts"
 
 ```ts
 // reqprobe.config.ts
-import type { Config } from 'reqprobe';
+import type { Config } from 'req-probe';
 
 const config: Config = {
   baseUrl: 'https://api.yourservice.com',
   timeout: 10_000,
-  headers: {
-    Authorization: `Bearer ${process.env.API_TOKEN}`,
+
+  // Auth applied automatically to every request — no per-test boilerplate
+  auth: {
+    type: 'bearer',                      // 'bearer' | 'basic' | 'api-key' | 'oauth2'
+    token: process.env.API_TOKEN ?? '',
   },
+
+  // OpenAPI contract validation — optional, additive
   openapi: {
     specPath: './openapi.json',
-    strict: false,           // true = fail on missing schemas
+    strict: false,                       // true = fail if endpoint not in spec
   },
+
+  // Reports — all optional
   reporters: {
     outDir: './reqprobe-reports',
-    json: true,
-    html: true,
+    html: true,                          // reqprobe-reports/report.html
+    json: true,                          // reqprobe-reports/report.json
+    junit: true,                         // reqprobe-reports/report.xml (Jenkins/GitLab/Azure)
   },
 };
 
 export default config;
+```
+
+### Environment profiles
+
+```bash
+reqprobe run --env staging      # loads reqprobe.config.staging.ts
+reqprobe run --env production
 ```
 
 ---
@@ -185,31 +219,32 @@ export default config;
 ### DSL style (recommended)
 
 ```ts
-// users.test.ts
-import { test } from 'reqprobe/dsl';
+import { test, beforeAll, afterAll } from 'req-probe/dsl';
 
-test('GET /users — returns a list', async (ctx) => {
-  const res = await ctx.request({ url: '/users', method: 'GET' });
+let authToken: string;
+
+beforeAll(async () => {
+  const res = await fetch('https://api.example.com/auth/token', { method: 'POST' });
+  authToken = (await res.json()).token;
+});
+
+test('GET /users @smoke', async (ctx) => {
+  const res = await ctx.api.get('/users');
   ctx.expect(res).toHaveStatus(200);
   ctx.expect(res.body).toHaveProperty('data');
 });
 
-test('POST /users — creates a user', async (ctx) => {
-  const res = await ctx.request({
-    url: '/users',
-    method: 'POST',
-    body: { name: 'Alice', email: 'alice@example.com' },
-  });
+test('POST /users @regression', async (ctx) => {
+  const res = await ctx.api.post('/users', { name: 'Alice', email: 'alice@example.com' });
   ctx.expect(res).toHaveStatus(201);
-  ctx.expect(res.body.name).toBe('Alice');
+  ctx.expect(res.body.id).toBeTruthy();
 });
 ```
 
-### Suite style (for shared setup)
+### Suite style
 
 ```ts
-// auth.test.ts
-import type { TestSuite } from 'reqprobe';
+import type { TestSuite } from 'req-probe';
 
 const suite: TestSuite = {
   name: 'Auth API',
@@ -217,10 +252,9 @@ const suite: TestSuite = {
     {
       name: 'POST /auth/login — returns token',
       run: async (ctx) => {
-        const res = await ctx.request({
-          url: '/auth/login',
-          method: 'POST',
-          body: { email: 'admin@example.com', password: 'secret' },
+        const res = await ctx.api.post('/auth/login', {
+          email: 'admin@example.com',
+          password: 'secret',
         });
         ctx.expect(res).toHaveStatus(200);
         ctx.expect(res.body.token).toBeTruthy();
@@ -232,10 +266,38 @@ const suite: TestSuite = {
 export default suite;
 ```
 
+### Async polling — test background jobs and webhooks
+
+```ts
+test('background export job completes', async (ctx) => {
+  const job = await ctx.api.post('/jobs', { type: 'export', format: 'csv' });
+  ctx.expect(job).toHaveStatus(202);
+
+  const result = await ctx.api.poll(`/jobs/${job.body.id}`, {
+    until: (res) => res.body.status === 'complete',
+    interval: 1000,    // ms between checks
+    timeout: 30_000,   // throws if never met
+  });
+
+  ctx.expect(result.body.downloadUrl).toBeTruthy();
+});
+```
+
+### Schema-driven fuzzing — auto-generate test data from OpenAPI
+
+```ts
+test('POST /users with generated payload', async (ctx) => {
+  const payload = ctx.fuzz.generate('/users', 'POST');
+  const res = await ctx.api.post('/users', payload);
+  ctx.expect(res).toHaveStatus(201);
+});
+```
+
 ### Available assertions
 
 ```ts
 ctx.expect(res).toHaveStatus(200);
+ctx.expect(res).toRespondWithin(500);       // response time in ms
 ctx.expect(res.body.name).toBe('Alice');
 ctx.expect(res.body.items).toEqual([1, 2, 3]);
 ctx.expect(res.body.message).toContain('success');
@@ -247,34 +309,27 @@ ctx.expect(res.body).toHaveProperty('id');
 
 ## OpenAPI Contract Validation
 
-> **This feature is entirely optional.** reqprobe works perfectly without a spec — OpenAPI validation is an additive layer you enable when you're ready.
-
-Point reqprobe at your OpenAPI 3.x spec and every response is automatically validated against its schema using [Ajv](https://ajv.js.org/) — no extra assertions needed in your tests.
+Point reqprobe at your OpenAPI 3.x spec and every API response is **automatically validated** against its schema — no extra assertions needed in tests.
 
 ```ts
 // reqprobe.config.ts
-const config: Config = {
-  baseUrl: 'https://api.yourservice.com',
-  openapi: {
-    specPath: './openapi.json',
-    strict: false,
-  },
-};
+openapi: {
+  specPath: './openapi.json',
+  strict: false,   // true = fail on endpoints missing from the spec
+}
 ```
 
 ```ts
-// products.test.ts
+// Every ctx.api call now validates the response automatically
 test('GET /products/:id — response matches schema', async (ctx) => {
-  const res = await ctx.request({ url: '/products/42', method: 'GET' });
-
-  // reqprobe automatically validates res.body against
-  // the GET /products/{id} → 200 schema in your spec.
-  // No extra assertion needed.
+  const res = await ctx.api.get('/products/42');
   ctx.expect(res).toHaveStatus(200);
+  // reqprobe validates res.body against GET /products/{id} → 200 in the spec
+  // No extra assertion needed
 });
 ```
 
-If the response body doesn't match the schema, reqprobe throws a detailed error:
+When a response doesn't match the schema, reqprobe gives a precise error:
 
 ```
   ✖ GET /products/42 — response matches schema  (67ms)
@@ -288,28 +343,22 @@ If the response body doesn't match the schema, reqprobe throws a detailed error:
 - Local `$ref` resolution
 - Path template matching (`/users/{id}`)
 - `default` response fallback
-- `strict: false` silently skips missing schemas (good for partial specs)
+- `strict: false` silently skips missing schemas (safe for partial specs)
 
 ---
 
-## Generating Reports
-
-> **This feature is entirely optional.** If no `reporters` config is set, reqprobe simply prints results to the terminal and exits — no files are written.
+## Reports
 
 ```ts
 reporters: {
   outDir: './reqprobe-reports',
-  json: true,   // reqprobe-reports/report.json
-  html: true,   // reqprobe-reports/report.html
+  html:  true,   // self-contained HTML — attach to PRs or upload as CI artifact
+  json:  true,   // machine-readable — dashboards, Slack bots, downstream tools
+  junit: true,   // JUnit XML — Jenkins, GitLab CI test dashboard, Azure DevOps
 }
 ```
 
-The **HTML report** is a fully self-contained, dependency-free file — open it in any browser, attach it to a PR, or upload it as a CI artifact. It includes:
-- Pass/fail summary with total duration
-- Per-suite test tables with badges
-- Expandable error rows showing expected vs received + response body
-
-The **JSON report** is machine-readable — suitable for dashboards, downstream tooling, or Slack bots.
+The **HTML report** is fully self-contained — open it in any browser with no server needed.
 
 ---
 
@@ -333,11 +382,11 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - name: Run API tests
-        run: npx reqprobe run "tests/**/*.test.ts"
+        run: npx reqprobe run "tests/**/*.test.ts" --workers 4
         env:
           API_TOKEN: ${{ secrets.API_TOKEN }}
-          BASE_URL: ${{ vars.STAGING_URL }}
-      - name: Upload HTML report
+          API_BASE_URL: ${{ vars.STAGING_URL }}
+      - name: Upload report
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -355,103 +404,87 @@ api-tests:
     - npx reqprobe run "tests/**/*.test.ts"
   artifacts:
     when: always
+    reports:
+      junit: reqprobe-reports/report.xml   # shows inline in GitLab MR
     paths:
       - reqprobe-reports/
     expire_in: 7 days
-  variables:
-    API_TOKEN: $API_TOKEN
 ```
 
-reqprobe exits with code `1` when any test fails — no extra configuration needed.
+### Jenkins
+
+```groovy
+stage('API Tests') {
+  steps {
+    sh 'npm ci'
+    sh 'npx reqprobe run "tests/**/*.test.ts"'
+  }
+  post {
+    always {
+      junit 'reqprobe-reports/report.xml'
+    }
+  }
+}
+```
 
 ---
 
 ## Monorepo Usage
 
-reqprobe reads config from the nearest `reqprobe.config.ts` relative to where you run it. Each package can have its own config:
+reqprobe reads the nearest `reqprobe.config.ts`. Each service owns its own config:
 
 ```
 apps/
   users-service/
     reqprobe.config.ts      # baseUrl: http://users-service
     tests/
-      users.test.ts
   orders-service/
     reqprobe.config.ts      # baseUrl: http://orders-service
     tests/
-      orders.test.ts
 ```
 
 ```bash
-# Run tests for a specific service from monorepo root
+# From monorepo root
 npx reqprobe run "apps/users-service/tests/**/*.test.ts"
 
-# Or from within the package
-cd apps/users-service
-npx reqprobe run "tests/**/*.test.ts"
+# From within the service
+cd apps/users-service && npx reqprobe run "tests/**/*.test.ts"
 ```
-
-Shared base config with per-service overrides:
-
-```ts
-// apps/users-service/reqprobe.config.ts
-import baseConfig from '../../reqprobe.base.config.ts';
-
-export default {
-  ...baseConfig,
-  baseUrl: process.env.USERS_SERVICE_URL ?? 'http://localhost:3001',
-};
-```
-
----
-
-## Project Structure
-
-```
-src/
-├── types/        shared TypeScript contracts
-├── config/       config file loader
-├── request/      HTTP client (fetch-based, Node 18+)
-├── assertions/   assertion library (toBe, toHaveStatus, …)
-├── dsl/          global test() + expect() DSL
-├── runner/       test orchestrator
-├── openapi/      spec loading, $ref resolution, Ajv validation
-├── reporters/    JSON + HTML report generation
-├── cli/          CLI commands (run, init)
-└── utils/        logger
-```
-
-**Dependency rules:** each module only imports from modules below it. No circular dependencies. No DI framework.
 
 ---
 
 ## Roadmap
 
-| Status | Feature |
+See [ROADMAP.md](./ROADMAP.md) for the full prioritised backlog.
+
+### Shipped
+
+| Feature | Notes |
 |---|---|
-| ✅ | TypeScript-first test runner |
-| ✅ | DSL (`test()`) + suite (`TestSuite`) patterns |
-| ✅ | Full assertion library |
-| ✅ | OpenAPI 3.x response validation |
-| ✅ | HTML + JSON reports |
-| ✅ | CI exit codes |
-| ✅ | `.env` support |
-| 🔜 | `beforeAll` / `afterAll` hooks (v0.2) |
-| 🔜 | Watch mode (`reqprobe run --watch`) |
-| 🔜 | Scaffold from OpenAPI spec |
-| 🔜 | Parallel test execution |
-| 🔜 | Response time assertions (`toRespondWithin`) |
-| 🔜 | JUnit XML report (Jenkins / Azure DevOps) |
-| 🔜 | gRPC support |
-| 🔜 | VS Code extension |
+| ✅ TypeScript-native test runner | `test()` DSL + `TestSuite` object pattern |
+| ✅ Lifecycle hooks | `beforeAll` / `beforeEach` / `afterEach` / `afterAll` |
+| ✅ Full assertion library | `toBe`, `toEqual`, `toContain`, `toHaveStatus`, `toRespondWithin`, … |
+| ✅ OpenAPI 3.x contract validation | Automatic per-request schema check via Ajv |
+| ✅ Schema-driven fuzzing | `ctx.fuzz.generate('/users', 'POST')` + `reqprobe fuzz` CLI |
+| ✅ Auth helpers | `bearer`, `basic`, `api-key`, `oauth2` — configured once, applied everywhere |
+| ✅ Async polling | `ctx.api.poll()` for job queues, webhooks, and background tasks |
+| ✅ Tag filtering | `test('name @smoke', …)` → `reqprobe run --tag smoke` |
+| ✅ Parallel execution | `reqprobe run --workers 8` |
+| ✅ HTML + JSON + JUnit XML reports | JUnit for Jenkins, GitLab CI, Azure DevOps |
+| ✅ Watch mode | `reqprobe run --watch` |
+| ✅ Scaffold generator | `reqprobe generate --from openapi.json` |
+| ✅ CI exit codes | Exits `1` on failure — zero config required |
+| ✅ `.env` support + environment profiles | Per-environment config files |
+
+### Up next — [ROADMAP.md](./ROADMAP.md)
+
+GraphQL support · Mock server from spec · Snapshot testing · OpenAPI spec diff · Load testing · Multi-region performance testing
 
 ---
 
 ## Contributing
 
-Contributions are welcome. reqprobe is intentionally small — please keep PRs focused.
-
-### Setup
+Contributions are welcome. reqprobe is intentionally small — keep PRs focused.
 
 ```bash
 git clone https://github.com/shashi089/reqprobe.git
@@ -460,23 +493,19 @@ npm install
 npm run build
 ```
 
-### Project conventions
+**Conventions:**
+- No new runtime dependencies without discussion — current footprint is intentionally minimal (`ajv`, `commander`, `dotenv`, `fast-glob`, `picocolors`, `tsx`)
+- Single responsibility — each module in `src/` has one job
+- No circular imports — dependency graph is strictly one-way
+- TypeScript strict mode — `tsc` must exit 0 before any PR merges
 
-- **No new runtime dependencies** without discussion — current footprint is intentionally minimal (`ajv`, `commander`, `dotenv`, `fast-glob`, `picocolors`, `tsx`)
-- **Single responsibility** — each module in `src/` has one job
-- **No circular imports** — dependency graph is strictly one-way
-- **TypeScript strict mode** — `tsc` must exit 0 before any PR is merged
-
-### Submitting a PR
-
-1. Fork the repo and create a feature branch
-2. Make your change + update or add examples in `examples/`
+**Submitting a PR:**
+1. Fork and create a feature branch
+2. Make your change + add or update examples in `examples/`
 3. Run `npm run build` — must exit 0
 4. Open a PR with a clear description of what and why
 
-### Reporting bugs
-
-Open an issue with:
+**Reporting bugs** — open an issue with:
 - reqprobe version (`npx reqprobe --version`)
 - Node version (`node --version`)
 - Minimal reproduction (test file + config)

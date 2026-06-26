@@ -1,4 +1,4 @@
-import { test, expect } from '../src/dsl/index.js';
+import { test, expect } from 'reqprobe/dsl';
 
 /**
  * Example: Authentication and Authorization Testing

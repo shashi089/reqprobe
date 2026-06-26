@@ -2,13 +2,10 @@ import { ReporterConfig } from '../types/index.js';
 import { ReportSummary } from './types.js';
 import { writeJsonReport } from './json.js';
 import { writeHtmlReport } from './html.js';
+import { writeJunitReport } from './junit.js';
 
 const DEFAULT_OUT_DIR = './reqprobe-reports';
 
-/**
- * Runs all enabled reporters after a test run completes.
- * No-op if config.reporters is undefined.
- */
 export async function runReporters(
     summary: ReportSummary,
     reporterConfig: ReporterConfig | undefined
@@ -17,11 +14,7 @@ export async function runReporters(
 
     const outDir = reporterConfig.outDir ?? DEFAULT_OUT_DIR;
 
-    if (reporterConfig.json) {
-        writeJsonReport(summary, outDir);
-    }
-
-    if (reporterConfig.html) {
-        writeHtmlReport(summary, outDir);
-    }
+    if (reporterConfig.json)  writeJsonReport(summary, outDir);
+    if (reporterConfig.html)  writeHtmlReport(summary, outDir);
+    if (reporterConfig.junit) writeJunitReport(summary, outDir);
 }

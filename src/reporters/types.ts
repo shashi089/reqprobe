@@ -26,4 +26,9 @@ export interface ReportSummary {
     totalTests: number;
     totalDuration: number;    // ms
     suites: ReportSuite[];
+    performance?: {
+        avgResponseTime: number;
+        minResponseTime: number;
+        maxResponseTime: number;
+    };
 }

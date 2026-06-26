@@ -36,6 +36,15 @@ export class ResultCollector {
         const totalFailed = this.suites.reduce((n, s) => n + s.failed, 0);
         const totalDuration = this.suites.reduce((n, s) => n + s.duration, 0);
 
+        // Calculate timing metrics
+        const allDurations = this.suites.flatMap((s) => s.results.map((r) => r.duration));
+        const hasDurations = allDurations.length > 0;
+        const minResponseTime = hasDurations ? Math.min(...allDurations) : 0;
+        const maxResponseTime = hasDurations ? Math.max(...allDurations) : 0;
+        const avgResponseTime = hasDurations
+            ? Math.round(allDurations.reduce((sum, d) => sum + d, 0) / allDurations.length)
+            : 0;
+
         return {
             timestamp: new Date().toISOString(),
             totalPassed,
@@ -43,6 +52,11 @@ export class ResultCollector {
             totalTests: totalPassed + totalFailed,
             totalDuration,
             suites: this.suites,
+            performance: {
+                avgResponseTime,
+                minResponseTime,
+                maxResponseTime,
+            },
         };
     }
 }

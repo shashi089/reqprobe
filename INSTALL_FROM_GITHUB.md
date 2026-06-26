@@ -1,46 +1,40 @@
-# Installing reqprobe Directly from GitHub
+# Installing req-probe
 
-> **No npm account needed.** Use this guide to install reqprobe directly into your project from the GitHub repository — ideal for evaluating the framework before it is published to npm.
+## From npm (recommended)
+
+```bash
+npm install req-probe
+```
+
+That's it. The CLI is immediately available:
+
+```bash
+npx reqprobe run "tests/**/*.test.ts"
+```
 
 ---
 
-## Prerequisites
+## From GitHub (pre-release / latest)
 
-- Node.js 18 or higher
-- npm 7 or higher (for `file:` and `github:` dependency support)
-
----
-
-## Option 1 — Install from GitHub URL (recommended)
-
-Add reqprobe directly to your project's `package.json` using npm's built-in GitHub install:
+Install directly from the GitHub repository to get unreleased changes:
 
 ```bash
 npm install github:shashi089/reqprobe
 ```
 
-Or pin to a specific commit or branch for stability:
+npm clones the repo, runs `npm run build` via the `prepare` script, and installs it — exactly like a published package.
+
+Pin to a specific commit for reproducibility:
 
 ```bash
-# Specific branch
-npm install github:shashi089/reqprobe#main
-
-# Specific commit SHA
 npm install github:shashi089/reqprobe#a1b2c3d
 ```
 
-npm will clone the repo, run `npm run build` (the `prepare` script), and install it as a local dependency — exactly like a published package.
-
-> Replace `shashi089/reqprobe` with the actual GitHub username and repo name once the repo is public.
-
 ---
 
-## Option 2 — Install from a local clone
-
-If you want to modify reqprobe alongside your project, clone it locally first:
+## From a local clone (contributors)
 
 ```bash
-# 1. Clone the repo somewhere on your machine
 git clone https://github.com/shashi089/reqprobe.git
 cd reqprobe
 npm install
@@ -53,90 +47,44 @@ Then in your project:
 npm install file:../reqprobe
 ```
 
-Or add it manually to `package.json`:
-
-```json
-{
-  "dependencies": {
-    "reqprobe": "file:../reqprobe"
-  }
-}
-```
-
-Run `npm install` to link it. Any time you change reqprobe, rebuild it (`npm run build` inside the reqprobe folder) and reinstall in your project.
+Any time you change req-probe source, run `npm run build` inside the clone and reinstall in your project.
 
 ---
 
-## Step-by-step: Setting up your first test
+## Quick start after installing
 
-### 1. Install reqprobe
-
-```bash
-npm install github:shashi089/reqprobe
-```
-
-### 2. Create a config file
+### 1. Create a config file
 
 ```ts
 // reqprobe.config.ts
-import type { Config } from 'reqprobe';
+import type { Config } from 'req-probe';
 
 const config: Config = {
   baseUrl: 'https://your-api.com',
   timeout: 10_000,
-  headers: {
-    Authorization: `Bearer ${process.env.API_TOKEN}`,
+  auth: {
+    type: 'bearer',
+    token: process.env.API_TOKEN ?? '',
   },
 };
 
 export default config;
 ```
 
-### 3. Write your first test
+### 2. Write a test
 
 ```ts
 // tests/users.test.ts
-import { test } from 'reqprobe/dsl';
+import { test } from 'req-probe/dsl';
 
 test('GET /users — returns 200', async (ctx) => {
-  const res = await ctx.request({
-    url: '/users',
-    method: 'GET',
-  });
-
+  const res = await ctx.api.get('/users');
   ctx.expect(res).toHaveStatus(200);
   ctx.expect(res.body).toHaveProperty('data');
 });
-
-test('POST /users — creates a user', async (ctx) => {
-  const res = await ctx.request({
-    url: '/users',
-    method: 'POST',
-    body: { name: 'Alice', email: 'alice@example.com' },
-  });
-
-  ctx.expect(res).toHaveStatus(201);
-  ctx.expect(res.body.name).toBe('Alice');
-});
 ```
 
-### 4. Add a script to `package.json`
-
-```json
-{
-  "scripts": {
-    "test:api": "reqprobe run \"tests/**/*.test.ts\""
-  }
-}
-```
-
-### 5. Run your tests
-
-```bash
-npm run test:api
-```
-
-Or directly:
+### 3. Run
 
 ```bash
 npx reqprobe run "tests/**/*.test.ts"
@@ -146,68 +94,22 @@ npx reqprobe run "tests/**/*.test.ts"
 
 ## Environment variables
 
-Create a `.env` file in your project root — reqprobe loads it automatically:
+Create a `.env` file — req-probe loads it automatically:
 
 ```env
 API_TOKEN=your-secret-token
-BASE_URL=https://staging.your-api.com
-```
-
-Reference them in `reqprobe.config.ts` via `process.env.API_TOKEN`.
-
----
-
-## Updating reqprobe
-
-### If installed via GitHub URL
-
-```bash
-npm install github:shashi089/reqprobe
-```
-
-Re-running the install command always fetches the latest commit on the default branch.
-
-### If installed via local clone
-
-```bash
-# Inside the reqprobe folder
-git pull
-npm run build
-
-# Back in your project
-npm install
+API_BASE_URL=https://staging.your-api.com
 ```
 
 ---
 
 ## Troubleshooting
 
-**`reqprobe: command not found`**
+**`reqprobe: command not found`** — Run `npm install` to ensure the bin is linked, or use `npx reqprobe`.
 
-The `bin` entry requires the package to be built. If you installed from a local clone, make sure you ran `npm run build` inside the reqprobe directory first.
+**TypeScript errors on import** — Ensure your `tsconfig.json` uses `"moduleResolution": "Bundler"` or `"Node16"` so the `exports` field in req-probe's `package.json` is honoured.
 
-**TypeScript errors on import**
-
-Make sure your `tsconfig.json` includes:
-
-```json
-{
-  "compilerOptions": {
-    "moduleResolution": "bundler",
-    "module": "ESNext",
-    "target": "ES2022"
-  }
-}
-```
-
-**Tests not found**
-
-Pass the glob pattern explicitly:
-
+**Tests not found** — Quote the glob pattern to prevent shell expansion:
 ```bash
 npx reqprobe run "tests/**/*.test.ts"
 ```
-
-Glob patterns must be quoted to prevent shell expansion.
-
-The `package.json` is already configured with `name`, `bin`, `main`, and `engines`. No changes needed.

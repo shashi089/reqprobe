@@ -1,83 +1,159 @@
-# reqprobe - Architecture Overview
+# reqprobe — Architecture Overview
 
-## Test Discovery & Dynamic Import Pattern
+## Module Structure
 
-### Glob-Based Test Discovery
-The CLI uses `fast-glob` to discover test files dynamically:
+```
+src/
+├── types/        Shared TypeScript contracts (Config, TestCase, HttpResponse, …)
+├── config/       Config file loader (.env + per-environment reqprobe.config.{env}.ts)
+├── request/      HTTP client (fetch-based, Node 18+, auth helpers, poll())
+├── assertions/   Assertion library (toBe, toEqual, toHaveStatus, toRespondWithin, …)
+├── dsl/          Global test() DSL + beforeAll/beforeEach/afterEach/afterAll hooks
+├── runner/       Test orchestrator — context injection, hook execution, OpenAPI validation
+├── openapi/      Spec loading, $ref resolution, Ajv validation, schema fuzzing
+├── reporters/    HTML, JSON, JUnit XML report generation
+├── cli/          CLI commands: run, init, generate, fuzz
+├── watcher/      File-change detection for --watch mode
+└── utils/        Colored logger (picocolors)
+```
+
+**Dependency rule:** each module only imports from modules below it in this list.
+No circular dependencies. No DI framework.
+
+---
+
+## Test Discovery & Execution
+
+### 1. Glob-Based Discovery
 
 ```typescript
-// In src/cli/commands/run.ts
-const testFiles = await glob(pattern, { absolute: true });
 // Default pattern: **/*.test.ts
+const testFiles = await glob(pattern, { absolute: true });
 ```
 
-**How it works:**
-1. User runs: `reqprobe run examples/*.test.ts`
-2. Glob pattern expands to match all test files
-3. Returns absolute file paths for import
+### 2. Sequential Import (Registry Pattern)
 
-### Dynamic Import Pattern
-Tests are loaded at runtime using dynamic imports:
+Imports are **intentionally sequential**. The registry is a module-level singleton — concurrent imports would corrupt each other's test lists.
 
 ```typescript
-// Clear registry before each file
-registry.clear();
-
-// Dynamic import triggers test() calls
-await import(pathToFileURL(file).toString() + `?t=${Date.now()}`);
-
-// Retrieve registered tests
-const tests = registry.getTests();
+for (const file of testFiles) {
+    registry.clear();
+    await import(pathToFileURL(file).toString() + `?t=${Date.now()}`);
+    // Importing the file triggers top-level test() calls, which self-register
+    const tests  = registry.getTests();
+    const hooks  = { beforeAlls: registry.getBeforeAlls(), ... };
+    bundles.push({ suiteName, tests, hooks });
+}
 ```
 
-**Cache Busting:** The `?t=${Date.now()}` query parameter ensures fresh imports during development.
+The `?t=${Date.now()}` cache-busts each import so watch mode re-executes files correctly.
 
-### API Context Injection
-The runner injects the HTTP client instance into each test:
+### 3. Concurrent Execution (--workers)
+
+After all files are imported and their tests + hooks captured, suites run concurrently up to `--workers` limit. Because hooks are captured per-file before clearing the registry, suites are fully isolated from each other even when running in parallel.
 
 ```typescript
-// In TestRunner.runTests()
-const ctx: TestContext = {
-  request: (req) => this.client.request(req),
-  expect: expect,
-  api: this.client,  // Direct HttpClient instance
+const completed = await runWithConcurrency(suiteRunners, workers);
+// workers = 1 (default, sequential) or N (parallel, I/O-bound speedup)
+```
+
+---
+
+## Context Injection
+
+Each test receives a fresh `TestContext`. The context wraps the shared `HttpClient` in a closure that also triggers OpenAPI validation on every response.
+
+```typescript
+// From src/runner/index.ts
+const makeRequest = async (req: HttpRequest): Promise<HttpResponse> => {
+    const res = await client.request(req);        // HTTP call
+    await validator?.validate(method, path, status, body);  // OpenAPI check
+    return res;
 };
 
-await test.run(ctx);
+const ctx: TestContext = {
+    request: requestClient,   // callable + .get/.post/.put/.patch/.delete/.poll
+    api: requestClient,       // alias
+    expect,                   // assertion library
+    fuzz: fuzzHelper,         // schema-driven payload generator
+};
 ```
 
-## Test File Structure
+### Writing Tests
 
-### Using the API Instance
 ```typescript
-import { test, expect } from '../src/core/dsl.js';
+import { test, expect } from 'reqprobe/dsl';
 
-test('GET request', async ({ api }) => {
-  const res = await api.get('/users');
-  expect(res).toHaveStatus(200);
+test('GET /users @smoke', async (ctx) => {
+    const res = await ctx.api.get('/users');
+    ctx.expect(res).toHaveStatus(200);
+    ctx.expect(res.body).toHaveProperty('data');
 });
 
-test('POST request', async ({ api }) => {
-  const res = await api.post('/posts', { title: 'Test' });
-  expect(res).toHaveStatus(201);
+// Destructuring also works:
+test('POST /users @regression', async ({ api, expect }) => {
+    const res = await api.post('/users', { name: 'Alice', email: 'alice@example.com' });
+    expect(res).toHaveStatus(201);
 });
 ```
 
-### Backward Compatible
+---
+
+## Auth Flow
+
+Auth is configured once in `reqprobe.config.ts` and applied to every request automatically. The `HttpClient` fetches and caches OAuth2 tokens transparently.
+
 ```typescript
-test('Using ctx.request', async (ctx) => {
-  const res = await ctx.request({ 
-    url: '/users', 
-    method: 'GET' 
-  });
-  expect(res).toHaveStatus(200);
+auth: { type: 'bearer', token: process.env.API_TOKEN }
+// or: 'basic', 'api-key', 'oauth2' (client_credentials, token cached + refreshed)
+```
+
+Priority (lowest → highest): `auth` < `config.headers` < per-request `headers`.
+
+---
+
+## OpenAPI Contract Validation
+
+When `config.openapi.specPath` is set, every `ctx.api.*` call is automatically validated against the spec after the response arrives — no extra assertions needed.
+
+```
+Request → HttpClient.request() → response
+                                     ↓
+                          OpenApiValidator.validate()
+                            → extractSchema(method, path, status)
+                            → resolveRefs(schema)
+                            → Ajv.validate(schema, body)
+                            → throw detailed error if invalid
+```
+
+`strict: false` silently skips endpoints not in the spec (good for partial specs).
+`strict: true` throws if no schema is found.
+
+---
+
+## Schema Fuzzing
+
+`SchemaFuzzer` generates realistic payloads from an OpenAPI request body schema. It handles `allOf`/`anyOf`/`oneOf`, string formats (uuid, email, date-time), enums, min/max, and nested objects. Injected into test context as `ctx.fuzz`.
+
+```typescript
+test('fuzz POST /users', async (ctx) => {
+    const payload = ctx.fuzz.generate('/users', 'POST');
+    const res = await ctx.api.post('/users', payload);
+    ctx.expect(res).toHaveStatus(201);
 });
 ```
+
+The CLI `reqprobe fuzz --from openapi.json` runs every endpoint automatically with generated payloads, flagging 5xx responses as failures.
+
+---
 
 ## Key Design Decisions
 
-1. **Registry Pattern**: Tests self-register during import
-2. **Singleton HttpClient**: One shared instance per test run
-3. **Context Injection**: Each test receives a fresh context with shared client
-4. **Sequential Execution**: Tests run one-by-one for deterministic behavior
-5. **Flexible API**: Both `api.get()` semantic methods and `ctx.request()` are supported
+| Decision | Reason |
+|---|---|
+| Registry pattern (self-registering tests) | Enables the clean `test()` DSL without explicit exports |
+| Sequential import, concurrent execution | Avoids registry race conditions while still parallelising I/O-bound HTTP calls |
+| Hooks captured per-file before registry.clear() | Makes parallel suite execution safe — no shared mutable hook state |
+| Auth applied in HttpClient, not in tests | Keeps tests clean; auth is an infrastructure concern |
+| OpenAPI validation in makeRequest closure | Every request is validated automatically; no test code changes needed |
+| 6 runtime dependencies | Intentional minimal footprint — ajv, commander, dotenv, fast-glob, picocolors, tsx |

@@ -34,12 +34,21 @@ export interface ReporterConfig {
     outDir?: string;   // default: './reqprobe-reports'
     json?: boolean;    // write report.json
     html?: boolean;    // write report.html
+    junit?: boolean;   // write report.xml (JUnit format for Jenkins/GitLab/Azure DevOps)
 }
+
+// Auth configuration — applied automatically to every request, no boilerplate in tests
+export type AuthConfig =
+    | { type: 'bearer'; token: string }
+    | { type: 'basic'; username: string; password: string }
+    | { type: 'api-key'; header: string; value: string }
+    | { type: 'oauth2'; tokenEndpoint: string; clientId: string; clientSecret: string; scopes?: string[] };
 
 export interface Config {
     baseUrl?: string;
     timeout?: number;
     headers?: Record<string, string | undefined>;
+    auth?: AuthConfig;
     openapi?: OpenApiConfig;
     reporters?: ReporterConfig;
 }
@@ -51,16 +60,37 @@ export interface TestSuite {
 
 export interface TestCase {
     name: string;
+    tags?: string[];
     run: (ctx: TestContext) => Promise<void>;
 }
 
+// Hooks captured per-file so parallel suite execution doesn't share state
+export interface SuiteHooks {
+    beforeAlls: Array<() => Promise<void> | void>;
+    afterAlls: Array<() => Promise<void> | void>;
+    beforeEachs: Array<() => Promise<void> | void>;
+    afterEachs: Array<() => Promise<void> | void>;
+}
+
+export interface PollOptions {
+    /** Predicate — polling stops when this returns true */
+    until: (res: HttpResponse) => boolean;
+    /** Milliseconds between polls (default: 1000) */
+    interval?: number;
+    /** Maximum wait time in milliseconds before throwing (default: 30000) */
+    timeout?: number;
+}
+
 export interface HttpClientLike {
+    (req: HttpRequest): Promise<HttpResponse>;
     request(req: HttpRequest): Promise<HttpResponse>;
     get(url: string, options?: { headers?: Record<string, string>; params?: Record<string, string> }): Promise<HttpResponse>;
     post(url: string, body?: any, options?: { headers?: Record<string, string>; params?: Record<string, string> }): Promise<HttpResponse>;
     put(url: string, body?: any, options?: { headers?: Record<string, string>; params?: Record<string, string> }): Promise<HttpResponse>;
     patch(url: string, body?: any, options?: { headers?: Record<string, string>; params?: Record<string, string> }): Promise<HttpResponse>;
     delete(url: string, options?: { headers?: Record<string, string>; params?: Record<string, string> }): Promise<HttpResponse>;
+    /** Poll a GET endpoint until a condition is met or timeout is reached */
+    poll(url: string, options: PollOptions): Promise<HttpResponse>;
 }
 
 export interface TestContext {
@@ -69,4 +99,6 @@ export interface TestContext {
     /** Alias for request (fluent HTTP client) */
     api: HttpClientLike;
     expect: any;
+    /** OpenAPI fuzzer helper to generate mock request bodies */
+    fuzz: any;
 }

@@ -33,6 +33,9 @@ yarn-error.log*
 coverage/
 .nyc_output/
 
+# Generated report output — never commit run artifacts
+reqprobe-reports/
+
 # Temporary files
 tmp/
 temp/

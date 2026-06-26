@@ -1,19 +1,35 @@
 {
-    "name": "reqprobe",
+    "name": "req-probe",
     "version": "1.0.0",
-    "description": "TypeScript-first Git-native API testing CLI with contract awareness",
+    "description": "TypeScript-first Git-native API testing CLI with OpenAPI contract validation",
     "type": "module",
     "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/index.js",
+            "types": "./dist/index.d.ts"
+        },
+        "./dsl": {
+            "import": "./dist/dsl/index.js",
+            "types": "./dist/dsl/index.d.ts"
+        }
+    },
     "bin": {
         "reqprobe": "./dist/cli/index.js"
     },
+    "files": [
+        "dist/",
+        "README.md",
+        "LICENSE"
+    ],
     "engines": {
         "node": ">=18.0.0"
     },
     "scripts": {
         "build": "tsc",
         "dev": "tsx watch src/cli/index.ts",
-        "test": "node dist/cli/index.js test",
+        "test": "node dist/cli/index.js run \"examples/**/*.test.ts\"",
         "prepare": "npm run build"
     },
     "keywords": [
@@ -22,16 +38,18 @@
         "typescript",
         "git-native",
         "contract-testing",
+        "openapi",
         "http-client",
         "testing-framework",
         "rest-api",
-        "api-automation"
+        "api-automation",
+        "fuzzing"
     ],
     "repository": {
         "type": "git",
         "url": "https://github.com/shashi089/reqprobe.git"
     },
-    "author": "",
+    "author": "Shashidhar Naik",
     "license": "MIT",
     "dependencies": {
         "ajv": "^8.18.0",

@@ -1,4 +1,4 @@
-import { test, expect } from '../src/dsl/index.js';
+import { test, expect } from 'reqprobe/dsl';
 
 // Example 1: Using the new api instance with semantic methods
 test('API Context: GET request using api.get()', async ({ api }) => {

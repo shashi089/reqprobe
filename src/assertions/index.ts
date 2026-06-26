@@ -73,6 +73,23 @@ export class Assertions {
             );
         }
     }
+
+    toRespondWithin(thresholdMs: number) {
+        if (typeof this.actual !== 'object' || this.actual === null || typeof this.actual.duration !== 'number') {
+            throw new AssertionError(
+                `Expected a response object with a duration property`,
+                `response object`,
+                this.actual
+            );
+        }
+        if (this.actual.duration > thresholdMs) {
+            throw new AssertionError(
+                `Expected response time to be within ${thresholdMs}ms but it took ${this.actual.duration}ms`,
+                `${thresholdMs}ms`,
+                `${this.actual.duration}ms`
+            );
+        }
+    }
 }
 
 export const expect = (actual: any) => new Assertions(actual);

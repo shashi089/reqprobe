@@ -19,6 +19,10 @@ export class OpenApiValidator {
         this.strict = config.strict ?? false;
     }
 
+    getSpec(): Record<string, any> {
+        return this.spec;
+    }
+
     async validate(
         method: HttpMethod,
         requestPath: string,

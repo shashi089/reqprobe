@@ -1,4 +1,4 @@
-import { test, expect } from '../src/dsl/index.js';
+import { test, expect } from 'reqprobe/dsl';
 
 test('HTTP Client: GET request using semantic method', async (ctx) => {
     const res = await ctx.request({
