@@ -36,6 +36,56 @@ If your API tests live in a GUI, they belong to a vendor — not your team. reqp
 
 ---
 
+## Why TypeScript for API testing?
+
+Most developers use Postman or Bruno for API testing. Both are great tools — but they use proprietary scripting that is disconnected from your codebase. reqprobe tests are TypeScript, which unlocks four things no GUI tool can match:
+
+### 1. Import your own app's types directly into tests
+
+```ts
+// Your NestJS / Express app already defines this type:
+import type { User } from '../src/users/user.entity';
+import { test } from 'req-probe/dsl';
+
+test('POST /users — response is a valid User', async (ctx) => {
+  const res = await ctx.api.post('/users', { name: 'Alice', email: 'alice@example.com' });
+
+  // res.body is typed as User — IDE autocomplete, type checking, everything
+  const user = res.body as User;
+  ctx.expect(user.id).toBeTruthy();
+  ctx.expect(user.email).toBe('alice@example.com');
+});
+```
+
+If you rename a field in your app, TypeScript will flag the test at compile time — before CI runs, before the test even executes. No other API testing tool can do this.
+
+### 2. Full IDE support — autocomplete, go-to-definition, inline docs
+
+Every method on `ctx.api`, every assertion on `ctx.expect`, every option in `reqprobe.config.ts` has complete type information. Your IDE autocompletes them, flags wrong arguments, and shows docs on hover. No tab-switching to documentation pages.
+
+### 3. Share fixtures, helpers, and constants from your codebase
+
+```ts
+// shared test helpers live in your repo alongside the tests
+import { createTestUser, cleanupTestUser } from '../helpers/test-fixtures';
+import { API_ROUTES } from '../src/constants/routes';
+
+test(`GET ${API_ROUTES.USERS} — returns paginated list`, async (ctx) => {
+  const user = await createTestUser();
+  const res  = await ctx.api.get(API_ROUTES.USERS);
+  ctx.expect(res).toHaveStatus(200);
+  await cleanupTestUser(user.id);
+});
+```
+
+In Postman, you'd hard-code the route string and copy-paste setup/teardown scripts into every collection. Here it's just a normal import.
+
+### 4. Tests break at compile time, not at 2am in production
+
+When your API changes — a renamed field, a removed endpoint, a changed status code — TypeScript catches the mismatch immediately when you run `tsc`. The feedback loop is seconds, not "CI failed after a 4-minute run."
+
+---
+
 ## Features
 
 | | Feature | Description |
