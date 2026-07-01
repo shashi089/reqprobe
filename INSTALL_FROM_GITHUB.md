@@ -3,26 +3,28 @@
 ## From npm (recommended)
 
 ```bash
-npm install req-probe
+npm i req-probe
 ```
 
-That's it. The CLI is immediately available:
+The CLI is immediately available via `npx`:
 
 ```bash
 npx reqprobe run "tests/**/*.test.ts"
 ```
 
+> **Note:** The npm package name is `req-probe` (with a hyphen). The GitHub repository is named `reqprobe` — these are two different things. Always install from npm using `req-probe`.
+
 ---
 
-## From GitHub (pre-release / latest)
+## From GitHub (latest unreleased code)
 
-Install directly from the GitHub repository to get unreleased changes:
+Install directly from the GitHub repository to get changes not yet on npm:
 
 ```bash
 npm install github:shashi089/reqprobe
 ```
 
-npm clones the repo, runs `npm run build` via the `prepare` script, and installs it — exactly like a published package.
+npm clones the repo, runs `npm run build` automatically via the `prepare` script, and installs it — exactly like a published package.
 
 Pin to a specific commit for reproducibility:
 
@@ -41,7 +43,7 @@ npm install
 npm run build
 ```
 
-Then in your project:
+Then link it into your project:
 
 ```bash
 npm install file:../reqprobe
@@ -51,9 +53,15 @@ Any time you change req-probe source, run `npm run build` inside the clone and r
 
 ---
 
-## Quick start after installing
+## Complete setup from zero
 
-### 1. Create a config file
+### 1. Install
+
+```bash
+npm i req-probe
+```
+
+### 2. Create a config file
 
 ```ts
 // reqprobe.config.ts
@@ -71,7 +79,7 @@ const config: Config = {
 export default config;
 ```
 
-### 2. Write a test
+### 3. Write a test
 
 ```ts
 // tests/users.test.ts
@@ -82,34 +90,84 @@ test('GET /users — returns 200', async (ctx) => {
   ctx.expect(res).toHaveStatus(200);
   ctx.expect(res.body).toHaveProperty('data');
 });
+
+test('POST /users — creates a user @smoke', async (ctx) => {
+  const res = await ctx.api.post('/users', { name: 'Alice', email: 'alice@example.com' });
+  ctx.expect(res).toHaveStatus(201);
+  ctx.expect(res.body.name).toBe('Alice');
+});
 ```
 
-### 3. Run
+### 4. Run
 
 ```bash
 npx reqprobe run "tests/**/*.test.ts"
+
+# Only smoke tests
+npx reqprobe run --tag smoke
+
+# Skip destructive tests
+npx reqprobe run --skip destructive
+
+# Run 4 files in parallel
+npx reqprobe run --workers 4
 ```
 
 ---
 
 ## Environment variables
 
-Create a `.env` file — req-probe loads it automatically:
+Create a `.env` file in your project root — req-probe loads it automatically:
 
 ```env
 API_TOKEN=your-secret-token
 API_BASE_URL=https://staging.your-api.com
 ```
 
+Use in your config:
+
+```ts
+// reqprobe.config.ts
+const config: Config = {
+  baseUrl: process.env.API_BASE_URL ?? 'http://localhost:3000',
+  auth: {
+    type: 'bearer',
+    token: process.env.API_TOKEN ?? '',
+  },
+};
+```
+
 ---
 
 ## Troubleshooting
 
-**`reqprobe: command not found`** — Run `npm install` to ensure the bin is linked, or use `npx reqprobe`.
+**`reqprobe: command not found`**
+Use `npx reqprobe` instead of `reqprobe` directly, or ensure `node_modules/.bin` is in your PATH.
 
-**TypeScript errors on import** — Ensure your `tsconfig.json` uses `"moduleResolution": "Bundler"` or `"Node16"` so the `exports` field in req-probe's `package.json` is honoured.
+**TypeScript errors on import from `req-probe`**
+Ensure your `tsconfig.json` uses `"moduleResolution": "Bundler"` or `"Node16"`:
 
-**Tests not found** — Quote the glob pattern to prevent shell expansion:
-```bash
-npx reqprobe run "tests/**/*.test.ts"
+```json
+{
+  "compilerOptions": {
+    "moduleResolution": "Bundler",
+    "module": "ESNext",
+    "target": "ES2022"
+  }
+}
 ```
+
+**Tests not found**
+Always quote the glob pattern to prevent shell expansion:
+
+```bash
+# correct
+npx reqprobe run "tests/**/*.test.ts"
+
+# wrong — shell expands the glob before reqprobe sees it
+npx reqprobe run tests/**/*.test.ts
+```
+
+**Installed from npm but getting old version**
+Check the installed version: `npx reqprobe --version`
+Update to latest: `npm install req-probe@latest`

@@ -109,7 +109,10 @@ When your API changes — a renamed field, a removed endpoint, a changed status 
 ## Installation
 
 ```bash
-# npm
+# npm (short form)
+npm i req-probe
+
+# npm (full)
 npm install req-probe
 
 # yarn
@@ -125,7 +128,15 @@ pnpm add req-probe
 
 ## Quick Start
 
-### 1. Create a config file
+### 1. Install
+
+```bash
+npm i req-probe
+```
+
+**Requirements:** Node.js 18 or higher.
+
+### 2. Create a config file
 
 ```ts
 // reqprobe.config.ts
@@ -143,7 +154,7 @@ const config: Config = {
 export default config;
 ```
 
-### 2. Write a test
+### 3. Write a test
 
 ```ts
 // tests/users.test.ts
@@ -162,7 +173,7 @@ test('POST /users — creates a user @smoke', async (ctx) => {
 });
 ```
 
-### 3. Run
+### 4. Run
 
 ```bash
 npx reqprobe run "tests/**/*.test.ts"
