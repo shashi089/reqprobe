@@ -505,30 +505,42 @@ cd apps/users-service && npx reqprobe run "tests/**/*.test.ts"
 
 ## Roadmap
 
-See [ROADMAP.md](./ROADMAP.md) for the full prioritised backlog.
+See [ROADMAP.md](./ROADMAP.md) for the full backlog with code examples and architecture notes.
 
-### Shipped
+### Phase 0 — Shipped ✅
 
 | Feature | Notes |
 |---|---|
 | ✅ TypeScript-native test runner | `test()` DSL + `TestSuite` object pattern |
 | ✅ Lifecycle hooks | `beforeAll` / `beforeEach` / `afterEach` / `afterAll` |
 | ✅ Full assertion library | `toBe`, `toEqual`, `toContain`, `toHaveStatus`, `toRespondWithin`, … |
-| ✅ OpenAPI 3.x contract validation | Automatic per-request schema check via Ajv |
+| ✅ OpenAPI 3.x contract validation | Automatic per-request schema check via Ajv — no extra assertions needed |
 | ✅ Schema-driven fuzzing | `ctx.fuzz.generate('/users', 'POST')` + `reqprobe fuzz` CLI |
-| ✅ Auth helpers | `bearer`, `basic`, `api-key`, `oauth2` — configured once, applied everywhere |
+| ✅ Auth helpers | `bearer`, `basic`, `api-key`, `oauth2` — configured once, applied everywhere. OAuth2 token cached automatically. |
 | ✅ Async polling | `ctx.api.poll()` for job queues, webhooks, and background tasks |
-| ✅ Tag filtering | `test('name @smoke', …)` → `reqprobe run --tag smoke` |
-| ✅ Parallel execution | `reqprobe run --workers 8` |
-| ✅ HTML + JSON + JUnit XML reports | JUnit for Jenkins, GitLab CI, Azure DevOps |
-| ✅ Watch mode | `reqprobe run --watch` |
-| ✅ Scaffold generator | `reqprobe generate --from openapi.json` |
+| ✅ Tag filtering | `test('name @smoke', …)` → `reqprobe run --tag smoke` / `--skip destructive` |
+| ✅ Parallel execution | `reqprobe run --workers 8` — concurrent file execution with isolated registries |
+| ✅ HTML + JSON + JUnit XML reports | JUnit for Jenkins, GitLab CI, Azure DevOps, TeamCity |
+| ✅ Watch mode | `reqprobe run --watch` — re-runs on file save |
+| ✅ Scaffold generator | `reqprobe generate --from openapi.json` — typed test stubs from spec |
 | ✅ CI exit codes | Exits `1` on failure — zero config required |
-| ✅ `.env` support + environment profiles | Per-environment config files |
+| ✅ `.env` support + environment profiles | Per-environment config files (`reqprobe.config.staging.ts`) |
 
-### Up next — [ROADMAP.md](./ROADMAP.md)
+### Phase 1 — v1.2 · In Progress · *~2–3 weeks*
 
-GraphQL support · Mock server from spec · Snapshot testing · OpenAPI spec diff · Load testing · Multi-region performance testing
+Retry logic · Richer failure diagnostics (full request + response on failure) · Multipart file upload · Cookie jar · `ctx.store` cross-request state · Multi-environment config block
+
+### Phase 2 — v1.3 · Planned · *~4–6 weeks*
+
+GraphQL support · Mock server from spec · Snapshot testing · OpenAPI spec diff · WebSocket & SSE testing · Plugin API · Schema-driven load testing
+
+### Phase 3 — v1.4 · Planned · *~2–3 months*
+
+Spec coverage report · OpenTelemetry tracing · Consumer-driven contract testing · Chaos/fault injection · gRPC support · Multi-region performance testing (open-source, self-hostable)
+
+### Phase 4 — v2.0 · Vision · *~6+ months*
+
+Self-hostable team dashboard · AI test generation from spec · AI anomaly detection · Enterprise SSO / RBAC
 
 ---
 

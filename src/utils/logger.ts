@@ -1,4 +1,5 @@
 import pc from 'picocolors';
+import type { HttpRequest, HttpResponse } from '../types/index.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -18,6 +19,21 @@ function truncateBody(body: unknown, maxLen = 400): string {
     if (str.length <= maxLen) return str;
     return str.slice(0, maxLen) + pc.dim(`\n  … (${str.length - maxLen} more chars)`);
 }
+
+function inlineBody(body: unknown, maxLen = 200): string {
+    const str = typeof body === 'string' ? body : JSON.stringify(body);
+    if (str.length <= maxLen) return str;
+    return str.slice(0, maxLen) + pc.dim(` … (+${str.length - maxLen} chars)`);
+}
+
+const HTTP_STATUS_TEXT: Record<number, string> = {
+    200: 'OK', 201: 'Created', 202: 'Accepted', 204: 'No Content',
+    301: 'Moved Permanently', 302: 'Found', 304: 'Not Modified',
+    400: 'Bad Request', 401: 'Unauthorized', 403: 'Forbidden',
+    404: 'Not Found', 405: 'Method Not Allowed', 409: 'Conflict',
+    422: 'Unprocessable Entity', 429: 'Too Many Requests',
+    500: 'Internal Server Error', 502: 'Bad Gateway', 503: 'Service Unavailable',
+};
 
 // ─── Logger ───────────────────────────────────────────────────────────────────
 
@@ -59,30 +75,86 @@ export const logger = {
         );
     },
 
-    testFail: (name: string, duration: number, error: any, responseBody?: unknown) => {
+    testFail: (
+        name: string,
+        duration: number,
+        error: any,
+        lastRequest?: HttpRequest,
+        sentHeaders?: Record<string, string>,
+        lastResponse?: HttpResponse,
+        baseUrl?: string,
+    ) => {
         console.log(
-            `  ${pc.red('✖')} ${pc.bold(pc.white(name))} ${pc.dim(formatDuration(duration))}`
+            `\n  ${pc.red('✖')} ${pc.bold(pc.white(name))} ${pc.dim(formatDuration(duration))}`
         );
+        console.log('');
 
-        // AssertionError: show expected vs received
+        // ── Request block ──────────────────────────────────────────────────────
+        if (lastRequest) {
+            const method = lastRequest.method ?? 'GET';
+            let fullUrl = lastRequest.url;
+            if (baseUrl && !lastRequest.url.startsWith('http')) {
+                try { fullUrl = new URL(lastRequest.url, baseUrl).toString(); } catch { /* use raw url */ }
+            }
+
+            const hasHeaders = sentHeaders && Object.keys(sentHeaders).length > 0;
+            const hasBody    = lastRequest.body !== undefined;
+
+            console.log(`    ${pc.bold('Request')}`);
+            console.log(`    ${pc.dim(hasHeaders || hasBody ? '├' : '└')} ${pc.cyan(method)} ${fullUrl}`);
+
+            if (hasHeaders) {
+                const headerStr = JSON.stringify(sentHeaders);
+                console.log(`    ${pc.dim(hasBody ? '├' : '└')} ${pc.dim('Headers:')} ${pc.dim(headerStr)}`);
+            }
+
+            if (hasBody) {
+                console.log(`    ${pc.dim('└')} ${pc.dim('Body:')} ${pc.dim(inlineBody(lastRequest.body))}`);
+            }
+
+            console.log('');
+        }
+
+        // ── Response block ─────────────────────────────────────────────────────
+        if (lastResponse) {
+            const statusText  = lastResponse.statusText || HTTP_STATUS_TEXT[lastResponse.status] || '';
+            const statusLine  = `${lastResponse.status}${statusText ? ' ' + statusText : ''}`;
+            const statusColor = lastResponse.status >= 500 ? pc.red
+                              : lastResponse.status >= 400 ? pc.yellow
+                              : pc.green;
+
+            const contentType = lastResponse.headers['content-type'] ?? lastResponse.headers['Content-Type'];
+            const hasBody     = lastResponse.body !== undefined;
+            const hasType     = !!contentType;
+
+            console.log(`    ${pc.bold('Response')}`);
+            console.log(`    ${pc.dim(hasType || hasBody ? '├' : '└')} ${statusColor(statusLine)}`);
+
+            if (hasType) {
+                console.log(`    ${pc.dim(hasBody ? '├' : '└')} ${pc.dim('Content-Type:')} ${pc.dim(contentType)}`);
+            }
+
+            if (hasBody) {
+                const bodyStr = truncateBody(lastResponse.body);
+                console.log(`    ${pc.dim('└')} ${pc.dim('Body:')}`);
+                bodyStr.split('\n').forEach(line => {
+                    console.log(`        ${pc.dim(line)}`);
+                });
+            }
+
+            console.log('');
+        }
+
+        // ── Assertion block ────────────────────────────────────────────────────
+        console.log(`    ${pc.bold('Assertion')}`);
         if (error?.expected !== undefined || error?.actual !== undefined) {
             console.log(`    ${pc.dim('├')} ${pc.dim('Expected:')} ${pc.green(JSON.stringify(error.expected))}`);
             console.log(`    ${pc.dim('└')} ${pc.dim('Received:')} ${pc.red(JSON.stringify(error.actual))}`);
         } else if (error?.message) {
-            // Generic error: show message
             const lines = String(error.message).split('\n');
             lines.forEach((line, i) => {
                 const connector = i === lines.length - 1 ? '└' : '├';
                 console.log(`    ${pc.dim(connector)} ${pc.red(line)}`);
-            });
-        }
-
-        // Response body (optional, shown when available)
-        if (responseBody !== undefined) {
-            console.log(`    ${pc.dim('└')} ${pc.dim('Response body:')}`);
-            const bodyStr = truncateBody(responseBody);
-            bodyStr.split('\n').forEach(line => {
-                console.log(`      ${pc.dim(line)}`);
             });
         }
 

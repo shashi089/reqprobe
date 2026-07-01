@@ -1,6 +1,6 @@
 {
     "name": "req-probe",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "description": "TypeScript-first Git-native API testing CLI with OpenAPI contract validation",
     "type": "module",
     "main": "./dist/index.js",

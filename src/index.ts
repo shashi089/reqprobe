@@ -14,6 +14,8 @@ export type {
     PollOptions,
     OpenApiConfig,
     ReporterConfig,
+    RetryConfig,
+    RequestOptions,
 } from './types/index.js';
 
 // DSL re-exported at root — supports both:

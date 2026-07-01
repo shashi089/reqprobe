@@ -1,4 +1,4 @@
-import { TestResult, TestContext, Config, TestCase, HttpRequest, HttpResponse, HttpClientLike, SuiteHooks, PollOptions } from '../types/index.js';
+import { TestResult, TestContext, Config, TestCase, HttpRequest, HttpResponse, HttpClientLike, SuiteHooks, PollOptions, RequestOptions } from '../types/index.js';
 import { HttpClient } from '../request/client.js';
 import { expect } from '../assertions/index.js';
 import { logger } from '../utils/logger.js';
@@ -56,6 +56,7 @@ export class TestRunner {
             }
 
             const testStartTime = performance.now();
+            let lastRequest:  HttpRequest  | undefined;
             let lastResponse: HttpResponse | undefined;
 
             try {
@@ -64,6 +65,7 @@ export class TestRunner {
                 const baseUrl   = this.config.baseUrl;
 
                 const makeRequest = async (req: HttpRequest): Promise<HttpResponse> => {
+                    lastRequest  = req;
                     const res = await client.request(req);
                     lastResponse = res;
 
@@ -102,16 +104,16 @@ export class TestRunner {
                 const requestClient = Object.assign(requestFn, {
                     request: makeRequest,
                     poll: pollFn,
-                    get: (url: string, opts?: { headers?: Record<string, string>; params?: Record<string, string> }) =>
-                        makeRequest({ url, method: 'GET', headers: opts?.headers, params: opts?.params }),
-                    post: (url: string, body?: any, opts?: { headers?: Record<string, string>; params?: Record<string, string> }) =>
-                        makeRequest({ url, method: 'POST', body, headers: opts?.headers, params: opts?.params }),
-                    put: (url: string, body?: any, opts?: { headers?: Record<string, string>; params?: Record<string, string> }) =>
-                        makeRequest({ url, method: 'PUT', body, headers: opts?.headers, params: opts?.params }),
-                    patch: (url: string, body?: any, opts?: { headers?: Record<string, string>; params?: Record<string, string> }) =>
-                        makeRequest({ url, method: 'PATCH', body, headers: opts?.headers, params: opts?.params }),
-                    delete: (url: string, opts?: { headers?: Record<string, string>; params?: Record<string, string> }) =>
-                        makeRequest({ url, method: 'DELETE', headers: opts?.headers, params: opts?.params }),
+                    get: (url: string, opts?: RequestOptions) =>
+                        makeRequest({ url, method: 'GET', headers: opts?.headers, params: opts?.params, retry: opts?.retry }),
+                    post: (url: string, body?: any, opts?: RequestOptions) =>
+                        makeRequest({ url, method: 'POST', body, headers: opts?.headers, params: opts?.params, retry: opts?.retry }),
+                    put: (url: string, body?: any, opts?: RequestOptions) =>
+                        makeRequest({ url, method: 'PUT', body, headers: opts?.headers, params: opts?.params, retry: opts?.retry }),
+                    patch: (url: string, body?: any, opts?: RequestOptions) =>
+                        makeRequest({ url, method: 'PATCH', body, headers: opts?.headers, params: opts?.params, retry: opts?.retry }),
+                    delete: (url: string, opts?: RequestOptions) =>
+                        makeRequest({ url, method: 'DELETE', headers: opts?.headers, params: opts?.params, retry: opts?.retry }),
                 }) as HttpClientLike;
 
                 const ctx: TestContext = {
@@ -129,8 +131,34 @@ export class TestRunner {
 
             } catch (error: any) {
                 const duration = Math.round(performance.now() - testStartTime);
-                logger.testFail(test.name, duration, error, lastResponse?.body);
-                results.push({ name: test.name, passed: false, duration, error, response: lastResponse });
+
+                // Build display headers with auth values masked so no secrets leak to console
+                let sentHeaders: Record<string, string> | undefined;
+                if (lastRequest) {
+                    sentHeaders = { 'Content-Type': 'application/json' };
+                    const auth = this.config.auth;
+                    if (auth) {
+                        switch (auth.type) {
+                            case 'bearer':  sentHeaders['Authorization'] = 'Bearer ***'; break;
+                            case 'basic':   sentHeaders['Authorization'] = 'Basic ***';  break;
+                            case 'api-key': sentHeaders[auth.header]     = '***';         break;
+                            case 'oauth2':  sentHeaders['Authorization'] = 'Bearer ***'; break;
+                        }
+                    }
+                    if (this.config.headers) {
+                        for (const [k, v] of Object.entries(this.config.headers)) {
+                            if (v !== undefined) sentHeaders[k] = v;
+                        }
+                    }
+                    if (lastRequest.headers) {
+                        for (const [k, v] of Object.entries(lastRequest.headers)) {
+                            sentHeaders[k] = v;
+                        }
+                    }
+                }
+
+                logger.testFail(test.name, duration, error, lastRequest, sentHeaders, lastResponse, this.config.baseUrl);
+                results.push({ name: test.name, passed: false, duration, error, request: lastRequest, response: lastResponse });
             } finally {
                 // afterEach hooks — always run even if test threw
                 try {

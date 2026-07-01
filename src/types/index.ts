@@ -1,11 +1,22 @@
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD' | 'OPTIONS';
 
+export interface RetryConfig {
+    /** Number of retry attempts after the first failure */
+    times: number;
+    /** Milliseconds to wait between retries (default: 500) */
+    delay?: number;
+    /** HTTP status codes that trigger a retry. If omitted, only network/timeout errors are retried. */
+    on?: number[];
+}
+
 export interface HttpRequest {
     url: string;
     method?: HttpMethod;
     headers?: Record<string, string>;
     body?: any;
     params?: Record<string, string>;
+    /** Per-request retry config — overrides the global config.retry */
+    retry?: RetryConfig;
 }
 
 export interface HttpResponse {
@@ -51,6 +62,8 @@ export interface Config {
     auth?: AuthConfig;
     openapi?: OpenApiConfig;
     reporters?: ReporterConfig;
+    /** Global retry config — applied to every request unless overridden per-request */
+    retry?: RetryConfig;
 }
 
 export interface TestSuite {
@@ -81,14 +94,20 @@ export interface PollOptions {
     timeout?: number;
 }
 
+export type RequestOptions = {
+    headers?: Record<string, string>;
+    params?: Record<string, string>;
+    retry?: RetryConfig;
+};
+
 export interface HttpClientLike {
     (req: HttpRequest): Promise<HttpResponse>;
     request(req: HttpRequest): Promise<HttpResponse>;
-    get(url: string, options?: { headers?: Record<string, string>; params?: Record<string, string> }): Promise<HttpResponse>;
-    post(url: string, body?: any, options?: { headers?: Record<string, string>; params?: Record<string, string> }): Promise<HttpResponse>;
-    put(url: string, body?: any, options?: { headers?: Record<string, string>; params?: Record<string, string> }): Promise<HttpResponse>;
-    patch(url: string, body?: any, options?: { headers?: Record<string, string>; params?: Record<string, string> }): Promise<HttpResponse>;
-    delete(url: string, options?: { headers?: Record<string, string>; params?: Record<string, string> }): Promise<HttpResponse>;
+    get(url: string, options?: RequestOptions): Promise<HttpResponse>;
+    post(url: string, body?: any, options?: RequestOptions): Promise<HttpResponse>;
+    put(url: string, body?: any, options?: RequestOptions): Promise<HttpResponse>;
+    patch(url: string, body?: any, options?: RequestOptions): Promise<HttpResponse>;
+    delete(url: string, options?: RequestOptions): Promise<HttpResponse>;
     /** Poll a GET endpoint until a condition is met or timeout is reached */
     poll(url: string, options: PollOptions): Promise<HttpResponse>;
 }

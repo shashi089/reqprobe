@@ -1,4 +1,4 @@
-import { HttpRequest, HttpResponse, Config, PollOptions } from '../types/index.js';
+import { HttpRequest, HttpResponse, Config, PollOptions, RetryConfig } from '../types/index.js';
 
 export class HttpClient {
     private tokenCache: { token: string; expiresAt: number } | null = null;
@@ -49,8 +49,6 @@ export class HttpClient {
     }
 
     async request(req: HttpRequest): Promise<HttpResponse> {
-        const start = performance.now();
-
         let fullUrl = req.url;
         if (this.config.baseUrl && !req.url.startsWith('http')) {
             fullUrl = new URL(req.url, this.config.baseUrl).toString();
@@ -83,6 +81,52 @@ export class HttpClient {
                 if (value !== undefined) headers[key] = value;
             });
         }
+
+        const retryConfig: RetryConfig | undefined = req.retry ?? this.config.retry;
+        return this._fetchWithRetry(req, fullUrl, headers, retryConfig);
+    }
+
+    private async _fetchWithRetry(
+        req: HttpRequest,
+        fullUrl: string,
+        headers: Record<string, string>,
+        retry: RetryConfig | undefined,
+    ): Promise<HttpResponse> {
+        const maxAttempts = retry ? retry.times + 1 : 1;
+        const delay       = retry?.delay ?? 500;
+        const retryOn     = retry?.on;
+
+        let lastResponse: HttpResponse | undefined;
+        let lastError: Error | undefined;
+
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            if (attempt > 0 && delay > 0) {
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+
+            try {
+                const res = await this._doFetch(req, fullUrl, headers);
+
+                // If status matches retry list and we have attempts left — retry
+                if (retryOn?.includes(res.status) && attempt < maxAttempts - 1) {
+                    lastResponse = res;
+                    continue;
+                }
+
+                return res;
+            } catch (err: any) {
+                lastError = err;
+                if (attempt < maxAttempts - 1) continue;
+            }
+        }
+
+        // All attempts exhausted — return last response if available, else throw
+        if (lastResponse) return lastResponse;
+        throw lastError;
+    }
+
+    private async _doFetch(req: HttpRequest, fullUrl: string, headers: Record<string, string>): Promise<HttpResponse> {
+        const start = performance.now();
 
         try {
             const response = await fetch(fullUrl, {
