@@ -19,26 +19,27 @@ Write REST API tests in TypeScript. Validate responses against your OpenAPI spec
 
 **reqprobe** is a lightweight, open-source API testing framework for TypeScript developers who want their tests to live in the codebase — not locked inside a GUI tool.
 
-Unlike Postman, Bruno, Insomnia, or Hoppscotch, reqprobe treats API tests as **real TypeScript code**: versioned in Git, reviewable in PRs, executable in any CI/CD pipeline with zero configuration.
+Most API testing tools use a graphical interface with proprietary scripting. reqprobe takes a different approach — tests are **real TypeScript code**: versioned in Git, reviewable in PRs, executable in any CI/CD pipeline with zero configuration.
 
 ### Why reqprobe over GUI-based tools?
 
-| | GUI Tools (Postman, Insomnia, Bruno) | reqprobe |
+| | GUI Tools | reqprobe |
 |---|---|---|
-| **Lives in Git** | ❌ JSON exports, not real code | ✅ `.ts` files — diff, blame, review |
-| **TypeScript** | ❌ Proprietary scripting | ✅ Native, typed, full IDE support |
+| **Lives in Git** | ❌ Proprietary formats, not real code | ✅ `.ts` files — diff, blame, review |
+| **TypeScript** | ❌ Proprietary scripting or custom DSL | ✅ Native, typed, full IDE support |
 | **OpenAPI contract testing** | ❌ Manual, optional | ✅ Automatic per-request validation |
-| **CI/CD** | ⚠️ Requires extra runners or paid plans | ✅ `npx reqprobe run` — done |
+| **CI/CD** | ⚠️ Requires extra setup or paid plans | ✅ `npx reqprobe run` — done |
 | **Schema-driven fuzzing** | ❌ Not available | ✅ Built-in, from your OpenAPI spec |
-| **Cost** | 💸 Subscription required for team features | ✅ Free, open-source, self-hostable |
+| **Import app types** | ❌ Not possible | ✅ `import type { User } from './src'` |
+| **Cost** | 💸 Free tiers limited, team features paid | ✅ Free, open-source |
 
-If your API tests live in a GUI, they belong to a vendor — not your team. reqprobe puts them back in your codebase where they belong.
+If your API tests live in a GUI tool, they belong to that vendor — not your team. reqprobe puts them back in your codebase where they belong.
 
 ---
 
 ## Why TypeScript for API testing?
 
-Most developers use Postman or Bruno for API testing. Both are great tools — but they use proprietary scripting that is disconnected from your codebase. reqprobe tests are TypeScript, which unlocks four things no GUI tool can match:
+Most developers use a GUI-based API testing tool. These tools are useful for manual exploration — but they use proprietary scripting that is disconnected from your codebase. reqprobe tests are TypeScript, which unlocks four things no GUI tool can match:
 
 ### 1. Import your own app's types directly into tests
 
@@ -78,7 +79,7 @@ test(`GET ${API_ROUTES.USERS} — returns paginated list`, async (ctx) => {
 });
 ```
 
-In Postman, you'd hard-code the route string and copy-paste setup/teardown scripts into every collection. Here it's just a normal import.
+In GUI tools, you'd hard-code the route string and copy-paste setup/teardown scripts into every collection. Here it's just a normal import.
 
 ### 4. Tests break at compile time, not at 2am in production
 
@@ -536,10 +537,12 @@ See [ROADMAP.md](./ROADMAP.md) for the full backlog with code examples and archi
 | ✅ Scaffold generator | `reqprobe generate --from openapi.json` — typed test stubs from spec |
 | ✅ CI exit codes | Exits `1` on failure — zero config required |
 | ✅ `.env` support + environment profiles | Per-environment config files (`reqprobe.config.staging.ts`) |
+| ✅ Retry logic | Per-request `retry: { times, delay, on }` + global config — retries on status codes or network errors |
+| ✅ Richer failure diagnostics | Full HTTP exchange on failure — request, masked headers, response body, assertion diff |
 
 ### Phase 1 — v1.2 · In Progress · *~2–3 weeks*
 
-Retry logic · Richer failure diagnostics (full request + response on failure) · Multipart file upload · Cookie jar · `ctx.store` cross-request state · Multi-environment config block
+Multipart file upload · Cookie jar · `ctx.store` cross-request state · Multi-environment config block
 
 ### Phase 2 — v1.3 · Planned · *~4–6 weeks*
 
