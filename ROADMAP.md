@@ -4,7 +4,7 @@
 
 ---
 
-## Phase 0 — v1.0 & v1.1: Shipped ✅
+## Phase 0 — v0.1.0 & v0.2.0: Shipped ✅
 
 Everything below is implemented and available today via `npm install reqprobe`.
 
@@ -33,49 +33,16 @@ Everything below is implemented and available today via `npm install reqprobe`.
 | ✅ `ctx.api.poll()` | Async polling for job queues, webhooks, and background tasks with configurable interval and timeout |
 | ✅ CI/CD ready | Exit code `1` on failure — works with GitHub Actions, GitLab CI, Jenkins, Azure DevOps |
 | ✅ Auto tsx loader | Detects `.ts` files and re-spawns with the correct loader automatically |
+| ✅ Retry logic | `retry: { times, delay, on }` per-request or global — retries on status codes or network errors |
+| ✅ Richer failure diagnostics | Full HTTP exchange on every failure — request, masked auth headers, response body, assertion diff |
 
 ---
 
-## Phase 1 — v1.2: Production Hardening
+## Phase 1 — v0.3.0: Production Hardening
 
 **Theme:** Remove the remaining friction that stops teams from adopting reqprobe on real projects.
 
 > Target: 2–3 weeks
-
-### ✅ Richer Failure Diagnostics
-
-Full HTTP exchange shown on every test failure — no more temporary `console.log` calls.
-
-```
-  ✖ POST /users — creates new user   (89ms)
-
-  Request
-  ├ POST https://api.example.com/users
-  ├ Headers: { Authorization: Bearer ***, Content-Type: application/json }
-  └ Body: { "name": "Alice", "email": "alice@example.com" }
-
-  Response
-  ├ 422 Unprocessable Entity
-  ├ Headers: { Content-Type: application/json }
-  └ Body: { "error": "email already exists" }
-
-  Assertion
-  ├ Expected status: 201
-  └ Received status: 422
-```
-
-### ✅ Retry Logic
-
-```typescript
-test('flaky third-party API', async (ctx) => {
-  const res = await ctx.api.get('/external/status', {
-    retry: { times: 3, delay: 500, on: [429, 503] }
-  });
-  ctx.expect(res).toHaveStatus(200);
-});
-```
-
-Also configurable globally in `reqprobe.config.ts`.
 
 ### Multipart Form / File Upload
 
@@ -143,7 +110,7 @@ reqprobe run --env production --tag smoke
 
 ---
 
-## Phase 2 — v1.3: Developer Ecosystem
+## Phase 2 — v0.4.0: Developer Ecosystem
 
 **Theme:** Expand the developer audience. Establish reqprobe as a platform, not just a runner.
 
@@ -284,7 +251,7 @@ reqprobe run --watch --serve        # live-reload report in watch mode
 
 ### Schema-Driven Load Testing
 
-**The insight:** k6, Artillery, JMeter, and Locust require you to write load test scripts as a separate discipline. reqprobe derives load scenarios from what you already have — your OpenAPI spec and your existing tests.
+**The insight:** Most load testing tools require you to write load test scripts as a separate discipline. reqprobe derives load scenarios from what you already have — your OpenAPI spec and your existing tests.
 
 ```bash
 reqprobe load --from ./openapi.json --vus 50 --duration 60s
@@ -319,7 +286,7 @@ Bottleneck: DELETE /users/{id} error rate rising above threshold
 
 ---
 
-## Phase 3 — v1.4: Enterprise & Scale
+## Phase 3 — v0.5.0: Enterprise & Scale
 
 **Theme:** The features enterprises pay for, kept open-source and self-hostable.
 
@@ -342,7 +309,7 @@ reqprobe coverage --from ./openapi.json
 
 ### OpenTelemetry Native Integration
 
-Every test run exports distributed traces. Each test = one span, each HTTP request = child span. Trace a test failure straight through to the backend service in Jaeger or Datadog.
+Every test run exports distributed traces. Each test = one span, each HTTP request = child span. Trace a test failure straight through to the backend service in your observability platform.
 
 ```typescript
 // reqprobe.config.ts
@@ -360,7 +327,7 @@ No test code changes needed.
 
 ### Consumer-Driven Contract Testing
 
-reqprobe-native alternative to Pact. Define what your service expects from its providers, verify providers deliver it.
+Built-in consumer-driven contract testing. Define what your service expects from its providers, verify providers deliver it.
 
 ```typescript
 // tests/contracts/user-service.contract.ts
@@ -433,7 +400,7 @@ test('GetUser RPC', async (ctx) => {
 
 ### Multi-Region Performance Testing
 
-**The gap:** Datadog Synthetics, Checkly, New Relic Synthetics, and k6 Cloud all do multi-region testing — all paid SaaS. No credible open-source option exists. reqprobe fills this.
+**The gap:** Most multi-region testing solutions are paid SaaS products — no credible open-source option exists. reqprobe fills this.
 
 **Phase A: GitHub Actions Matrix (zero infrastructure)**
 
@@ -481,7 +448,7 @@ Global p95: 167ms  |  Worst region: ap-southeast-1  |  Global availability: 99.7
 
 ---
 
-## Phase 4 — v2.0: Platform Vision
+## Phase 4 — v1.0.0: Platform Vision
 
 **Theme:** From CLI tool to team platform — still self-hostable, still open-source.
 
@@ -521,28 +488,22 @@ After enough test runs, reqprobe learns what "normal" looks like for each endpoi
 
 ---
 
-## Comparison with Alternatives
+## What makes reqprobe different
 
-| Dimension | reqprobe | Postman | Bruno | k6 | Artillery | Datadog Synthetics |
-|---|---|---|---|---|---|---|
-| Tests are real code | TypeScript | JS sandbox | DSL file | JS | YAML + JS | GUI |
-| Git-native | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ |
-| OpenAPI contract testing | ✅ Built-in | Manual | ❌ | ❌ | ❌ | ❌ |
-| Schema-driven load testing | Planned v1.3 | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Multi-region testing | Planned v1.4 (OSS) | ❌ | ❌ | Paid (k6 Cloud) | ❌ | Paid |
-| Schema fuzzing | ✅ Built-in | ❌ | ❌ | ❌ | ❌ | ❌ |
-| Self-hostable | ✅ | Partial | ✅ | ✅ | ✅ | ❌ |
-| Open source | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ |
-| Cost | Free | Paid tiers | Free | Free | Free | $15+/test/mo |
+- Tests are **real TypeScript code** — not a DSL, not a GUI format, not a proprietary sandbox
+- **Git-native** — diff, blame, PR review, branch per environment, just like your app code
+- **OpenAPI contract testing built-in** — automatic per-request validation, no extra assertions needed
+- **Schema-driven fuzzing** — generate realistic payloads directly from your OpenAPI spec
+- **Import your app's own types** — `import type { User } from './src'` works natively in tests
+- **Self-hostable** — no cloud dependency, no data leaves your network
+- **Free and open-source** — MIT License
 
 ---
 
 ## Contributing
 
-The highest-leverage contributions right now are in **Phase 1 (v1.2)**:
+The highest-leverage contributions right now are in **Phase 1 (v0.3.0)**:
 
-- `richer-diagnostics` — full HTTP exchange (request + response headers + body) on test failure
-- `retry-logic` — per-request `retry: { times, delay, on }` option + global config
 - `file-upload` — multipart form / binary file upload via `ctx.api.upload()`
 - `cookie-jar` — automatic cookie handling across requests within a test
 - `ctx-store` — cross-request value storage without manual closures
@@ -558,11 +519,11 @@ Open an issue tagged `roadmap` to discuss prioritization, propose new items, or 
 
 reqprobe follows [Semantic Versioning](https://semver.org/).
 
-- **Patch** (1.0.x) — bug fixes, no API changes
-- **Minor** (1.x.0) — new features, backwards compatible
-- **Major** (x.0.0) — breaking changes to config schema or test API (rare, announced early)
+- **Patch** (0.x.y) — bug fixes, no API changes
+- **Minor** (0.x.0) — new features, backwards compatible
+- **1.0.0** — stable release, API locked, long-term support begins
 
-Config files and test files written for v1.0 will work on all v1.x releases.
+Config files and test files written for any `0.x` release will continue to work on all subsequent `0.x` releases.
 
 ---
 
