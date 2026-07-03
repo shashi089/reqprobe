@@ -4,7 +4,7 @@
 
 **The open-source TypeScript API testing framework — code-first, Git-native, OpenAPI-aware.**
 
-[![npm](https://img.shields.io/npm/v/req-probe?color=0ea5e9&label=npm)](https://www.npmjs.com/package/req-probe)
+[![npm](https://img.shields.io/npm/v/reqprobe?color=0ea5e9&label=npm)](https://www.npmjs.com/package/reqprobe)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6)](https://www.typescriptlang.org)
@@ -45,7 +45,7 @@ Most developers use Postman or Bruno for API testing. Both are great tools — b
 ```ts
 // Your NestJS / Express app already defines this type:
 import type { User } from '../src/users/user.entity';
-import { test } from 'req-probe/dsl';
+import { test } from 'reqprobe/dsl';
 
 test('POST /users — response is a valid User', async (ctx) => {
   const res = await ctx.api.post('/users', { name: 'Alice', email: 'alice@example.com' });
@@ -110,16 +110,16 @@ When your API changes — a renamed field, a removed endpoint, a changed status 
 
 ```bash
 # npm (short form)
-npm i req-probe
+npm i reqprobe
 
 # npm (full)
-npm install req-probe
+npm install reqprobe
 
 # yarn
-yarn add req-probe
+yarn add reqprobe
 
 # pnpm
-pnpm add req-probe
+pnpm add reqprobe
 ```
 
 **Requirements:** Node.js 18 or higher.
@@ -131,7 +131,7 @@ pnpm add req-probe
 ### 1. Install
 
 ```bash
-npm i req-probe
+npm i reqprobe
 ```
 
 **Requirements:** Node.js 18 or higher.
@@ -140,7 +140,7 @@ npm i req-probe
 
 ```ts
 // reqprobe.config.ts
-import type { Config } from 'req-probe';
+import type { Config } from 'reqprobe';
 
 const config: Config = {
   baseUrl: 'https://your-api.com',
@@ -158,7 +158,7 @@ export default config;
 
 ```ts
 // tests/users.test.ts
-import { test } from 'req-probe/dsl';
+import { test } from 'reqprobe/dsl';
 
 test('GET /users — returns 200', async (ctx) => {
   const res = await ctx.api.get('/users');
@@ -212,7 +212,7 @@ Run this against the free [PokéAPI](https://pokeapi.co) — no auth, no setup:
 
 ```ts
 // tests/pokeapi.test.ts
-import { test } from 'req-probe/dsl';
+import { test } from 'reqprobe/dsl';
 
 test('GET /pokemon/pikachu — returns correct name', async (ctx) => {
   const res = await ctx.api.get('/pokemon/pikachu');
@@ -236,7 +236,7 @@ npx reqprobe run "tests/pokeapi.test.ts"
 
 ```ts
 // reqprobe.config.ts
-import type { Config } from 'req-probe';
+import type { Config } from 'reqprobe';
 
 const config: Config = {
   baseUrl: 'https://api.yourservice.com',
@@ -280,7 +280,7 @@ reqprobe run --env production
 ### DSL style (recommended)
 
 ```ts
-import { test, beforeAll, afterAll } from 'req-probe/dsl';
+import { test, beforeAll, afterAll } from 'reqprobe/dsl';
 
 let authToken: string;
 
@@ -305,7 +305,7 @@ test('POST /users @regression', async (ctx) => {
 ### Suite style
 
 ```ts
-import type { TestSuite } from 'req-probe';
+import type { TestSuite } from 'reqprobe';
 
 const suite: TestSuite = {
   name: 'Auth API',

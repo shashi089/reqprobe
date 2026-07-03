@@ -1,5 +1,5 @@
 {
-    "name": "req-probe",
+    "name": "reqprobe",
     "version": "0.1.0",
     "description": "TypeScript-first Git-native API testing CLI with OpenAPI contract validation",
     "type": "module",

@@ -1,4 +1,4 @@
-# req-probe — Roadmap
+# reqprobe — Roadmap
 
 > **Living document.** Priorities shift as the community grows. Open an issue to discuss or upvote items.
 
@@ -6,7 +6,7 @@
 
 ## Phase 0 — v1.0 & v1.1: Shipped ✅
 
-Everything below is implemented and available today via `npm install req-probe`.
+Everything below is implemented and available today via `npm install reqprobe`.
 
 | Feature | Notes |
 |---|---|
@@ -38,7 +38,7 @@ Everything below is implemented and available today via `npm install req-probe`.
 
 ## Phase 1 — v1.2: Production Hardening
 
-**Theme:** Remove the remaining friction that stops teams from adopting req-probe on real projects.
+**Theme:** Remove the remaining friction that stops teams from adopting reqprobe on real projects.
 
 > Target: 2–3 weeks
 
@@ -145,14 +145,14 @@ reqprobe run --env production --tag smoke
 
 ## Phase 2 — v1.3: Developer Ecosystem
 
-**Theme:** Expand the developer audience. Establish req-probe as a platform, not just a runner.
+**Theme:** Expand the developer audience. Establish reqprobe as a platform, not just a runner.
 
 > Target: 4–6 weeks
 
 ### GraphQL Support
 
 ```typescript
-import { test } from 'req-probe/dsl';
+import { test } from 'reqprobe/dsl';
 
 test('query user by ID', async (ctx) => {
   const res = await ctx.api.graphql('/graphql', {
@@ -250,8 +250,8 @@ Enable community ecosystem growth without bloating the core.
 
 ```typescript
 // reqprobe.config.ts
-import { opentelemetry } from '@req-probe/plugin-otel';
-import { awsSigV4 } from '@req-probe/plugin-aws-auth';
+import { opentelemetry } from '@reqprobe/plugin-otel';
+import { awsSigV4 } from '@reqprobe/plugin-aws-auth';
 
 const config: Config = {
   plugins: [
@@ -284,7 +284,7 @@ reqprobe run --watch --serve        # live-reload report in watch mode
 
 ### Schema-Driven Load Testing
 
-**The insight:** k6, Artillery, JMeter, and Locust require you to write load test scripts as a separate discipline. req-probe derives load scenarios from what you already have — your OpenAPI spec and your existing tests.
+**The insight:** k6, Artillery, JMeter, and Locust require you to write load test scripts as a separate discipline. reqprobe derives load scenarios from what you already have — your OpenAPI spec and your existing tests.
 
 ```bash
 reqprobe load --from ./openapi.json --vus 50 --duration 60s
@@ -360,11 +360,11 @@ No test code changes needed.
 
 ### Consumer-Driven Contract Testing
 
-req-probe-native alternative to Pact. Define what your service expects from its providers, verify providers deliver it.
+reqprobe-native alternative to Pact. Define what your service expects from its providers, verify providers deliver it.
 
 ```typescript
 // tests/contracts/user-service.contract.ts
-import { contract } from 'req-probe/contracts';
+import { contract } from 'reqprobe/contracts';
 
 contract('payments-service → user-service', {
   provider: 'user-service',
@@ -397,7 +397,7 @@ In CI, only re-run tests touching endpoints that changed in the current PR.
 reqprobe run --affected-since origin/main
 ```
 
-req-probe computes the git diff, maps changed files to affected API paths via OpenAPI spec analysis, and filters the test suite.
+reqprobe computes the git diff, maps changed files to affected API paths via OpenAPI spec analysis, and filters the test suite.
 
 ### Chaos / Fault Injection
 
@@ -420,7 +420,7 @@ test('client handles slow responses', async (ctx) => {
 ### gRPC / Protobuf Support
 
 ```typescript
-import { test } from 'req-probe/dsl';
+import { test } from 'reqprobe/dsl';
 
 test('GetUser RPC', async (ctx) => {
   const res = await ctx.api.rpc('UserService/GetUser', {
@@ -433,7 +433,7 @@ test('GetUser RPC', async (ctx) => {
 
 ### Multi-Region Performance Testing
 
-**The gap:** Datadog Synthetics, Checkly, New Relic Synthetics, and k6 Cloud all do multi-region testing — all paid SaaS. No credible open-source option exists. req-probe fills this.
+**The gap:** Datadog Synthetics, Checkly, New Relic Synthetics, and k6 Cloud all do multi-region testing — all paid SaaS. No credible open-source option exists. reqprobe fills this.
 
 **Phase A: GitHub Actions Matrix (zero infrastructure)**
 
@@ -461,7 +461,7 @@ reqprobe cloud run \
   --test ./api.test.ts
 ```
 
-The controller distributes test bundles, collects results, and generates a unified multi-region report. 100% self-hostable — no req-probe cloud dependency.
+The controller distributes test bundles, collects results, and generates a unified multi-region report. 100% self-hostable — no reqprobe cloud dependency.
 
 **Multi-region report:**
 
@@ -509,7 +509,7 @@ Understands: required vs optional fields, enum values, format constraints, min/m
 
 ### AI Anomaly Detection
 
-After enough test runs, req-probe learns what "normal" looks like for each endpoint. Automatically flags latency regressions, new error patterns, throughput degradation, and schema drift — no thresholds to configure manually.
+After enough test runs, reqprobe learns what "normal" looks like for each endpoint. Automatically flags latency regressions, new error patterns, throughput degradation, and schema drift — no thresholds to configure manually.
 
 ### Enterprise Features
 
@@ -523,7 +523,7 @@ After enough test runs, req-probe learns what "normal" looks like for each endpo
 
 ## Comparison with Alternatives
 
-| Dimension | req-probe | Postman | Bruno | k6 | Artillery | Datadog Synthetics |
+| Dimension | reqprobe | Postman | Bruno | k6 | Artillery | Datadog Synthetics |
 |---|---|---|---|---|---|---|
 | Tests are real code | TypeScript | JS sandbox | DSL file | JS | YAML + JS | GUI |
 | Git-native | ✅ | ❌ | ✅ | ✅ | ✅ | ❌ |
@@ -556,7 +556,7 @@ Open an issue tagged `roadmap` to discuss prioritization, propose new items, or 
 
 ## Versioning
 
-req-probe follows [Semantic Versioning](https://semver.org/).
+reqprobe follows [Semantic Versioning](https://semver.org/).
 
 - **Patch** (1.0.x) — bug fixes, no API changes
 - **Minor** (1.x.0) — new features, backwards compatible

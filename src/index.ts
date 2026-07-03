@@ -19,6 +19,6 @@ export type {
 } from './types/index.js';
 
 // DSL re-exported at root — supports both:
-//   import { test } from 'req-probe'
-//   import { test } from 'req-probe/dsl'
+//   import { test } from 'reqprobe'
+//   import { test } from 'reqprobe/dsl'
 export { test, expect, beforeAll, beforeEach, afterEach, afterAll } from './dsl/index.js';

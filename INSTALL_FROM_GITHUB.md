@@ -1,9 +1,9 @@
-# Installing req-probe
+# Installing reqprobe
 
 ## From npm (recommended)
 
 ```bash
-npm i req-probe
+npm i reqprobe
 ```
 
 The CLI is immediately available via `npx`:
@@ -12,7 +12,7 @@ The CLI is immediately available via `npx`:
 npx reqprobe run "tests/**/*.test.ts"
 ```
 
-> **Note:** The npm package name is `req-probe` (with a hyphen). The GitHub repository is named `reqprobe` — these are two different things. Always install from npm using `req-probe`.
+> **Note:** The npm package name is `reqprobe` (with a hyphen). The GitHub repository is named `reqprobe` — these are two different things. Always install from npm using `reqprobe`.
 
 ---
 
@@ -49,7 +49,7 @@ Then link it into your project:
 npm install file:../reqprobe
 ```
 
-Any time you change req-probe source, run `npm run build` inside the clone and reinstall in your project.
+Any time you change reqprobe source, run `npm run build` inside the clone and reinstall in your project.
 
 ---
 
@@ -58,14 +58,14 @@ Any time you change req-probe source, run `npm run build` inside the clone and r
 ### 1. Install
 
 ```bash
-npm i req-probe
+npm i reqprobe
 ```
 
 ### 2. Create a config file
 
 ```ts
 // reqprobe.config.ts
-import type { Config } from 'req-probe';
+import type { Config } from 'reqprobe';
 
 const config: Config = {
   baseUrl: 'https://your-api.com',
@@ -83,7 +83,7 @@ export default config;
 
 ```ts
 // tests/users.test.ts
-import { test } from 'req-probe/dsl';
+import { test } from 'reqprobe/dsl';
 
 test('GET /users — returns 200', async (ctx) => {
   const res = await ctx.api.get('/users');
@@ -117,7 +117,7 @@ npx reqprobe run --workers 4
 
 ## Environment variables
 
-Create a `.env` file in your project root — req-probe loads it automatically:
+Create a `.env` file in your project root — reqprobe loads it automatically:
 
 ```env
 API_TOKEN=your-secret-token
@@ -144,7 +144,7 @@ const config: Config = {
 **`reqprobe: command not found`**
 Use `npx reqprobe` instead of `reqprobe` directly, or ensure `node_modules/.bin` is in your PATH.
 
-**TypeScript errors on import from `req-probe`**
+**TypeScript errors on import from `reqprobe`**
 Ensure your `tsconfig.json` uses `"moduleResolution": "Bundler"` or `"Node16"`:
 
 ```json
@@ -170,4 +170,4 @@ npx reqprobe run tests/**/*.test.ts
 
 **Installed from npm but getting old version**
 Check the installed version: `npx reqprobe --version`
-Update to latest: `npm install req-probe@latest`
+Update to latest: `npm install reqprobe@latest`
